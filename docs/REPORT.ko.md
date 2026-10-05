@@ -103,6 +103,22 @@ VXLAN 장치와 wire 사이의 송신측 장치 스택별 결과다. 결정적 �
 - **`rx-udp-gro-forwarding on`**: UDP GRO도 TCP와 같은 `skb_gro_receive()`로 frag_list skb를 만든다. 상위 장치가 `skb_segment()`로 split하고, 하위 장치에서 `__skb_udp_tunnel_segment()`에 재진입하는 과정이 TCP와 똑같다. datagram의 약 95\~97%가 수신측에서 버려졌고, 수정을 적용하면 0이 된다.
 - **`rx-gro-list on`** (fraglist GRO): 상위 장치가 `skb_segment_list()`로 곧바로 개별 패킷까지 분할하므로 2차 분할이 없다.
 
+## tap 뒤의 VM (송신 방향)
+
+VM을 실행하면서 VM 트래픽을 터널로 내보내는 호스트(VM → tap → 라우팅 → vxlan → macvlan → VLAN → NIC)를 `lab/tools/tapinject.c`로 흉내 냈다. 이 도구는 QEMU처럼 virtio_net_hdr를 붙여 tap에 프레임을 쓴다(40 segs 버스트 200회, 6.8.0-100, KVM). 원본 데이터: `docs/data/vm-tap-send.txt`.
+
+| VM 송신 | tap | 터널 GSO | 1차 split | non-seed 재진입 | `UdpInCsumErrors` TX on / off |
+|---|---|---|---|---|---|
+| TSO 프레임 (virtio GSO) | 기본 | 있음 (200회 × 40 segs) | 0 | 0 | 0 / 0 |
+| MSS 크기 프레임 | 기본 | 없음 | 0 | 0 | 0 / 0 |
+| TSO 프레임 | `IFF_NAPI` | 있음 | 0 | 0 | 0 / 0 |
+| MSS 크기 프레임 | `IFF_NAPI` | 없음 | 0 | 0 | 0 / 0 |
+
+- **영향 없음.** tap은 프레임을 GRO 없이 `netif_receive_skb()`로 스택에 넘긴다(`write()` 경로와 vhost-net 경로 모두). 그래서 frag_list skb가 없다. VM의 TSO 프레임은 터널 GSO를 거치지만 상위 장치가 split할 것이 없고, 하위 장치는 항상 정상 seed를 받는다.
+- VM 프레임에는 `SKB_GSO_DODGY`가 붙는다. 첫 장치는 검증만 하고(`tcp_gso_segment()`가 일찍 반환) `__skb_udp_tunnel_segment()`는 되돌리는데, 이때 `encap_hdr_csum`이 켜진 채 정상 seed가 그대로 남는다. 다음 단계에서 수정 조건이 참이 되지만 같은 값을 다시 쓸 뿐이라 해가 없다.
+- 한계: `IFF_NAPI`를 쓰면 tap 수신이 GRO를 거치지만, 사용자 공간의 `write()`는 프레임마다 NAPI를 스케줄해서 집적되지 않는다. vhost-net 배치와 `IFF_NAPI`를 함께 쓰는 경우(QEMU 기본값은 `IFF_NAPI`를 쓰지 않음)는 흉내 내지 못했다.
+- 수신 방향(VXLAN → decap → tap → VM)은 `__skb_udp_tunnel_segment()`를 아예 거치지 않는다. decap 시 `iptunnel_pull_offloads()`가 터널 GSO 비트를 지운다. 다만 이런 호스트로 보내는 쪽이 영향 구성이면 여기서 오류가 *관찰*될 수는 있다.
+
 ### VLAN의 이력 의존성
 
 `register_netdevice()`는 새 장치의 `hw_enc_features`에 `NETIF_F_SG`를 넣는다. 그래서 VLAN은 생성 직후에는 터널 skb에 대해 SG를 가지며 1차 분할 지점이 될 수 있다. 하지만 하위 장치에서 feature 변경 이벤트(`NETDEV_FEAT_CHANGE`)가 오면 `vlan_transfer_features()`가 `hw_enc_features = vlan_tnl_features(real_dev)`로 덮어쓰고, 이 값에는 SG가 없다. 따라서 VLAN 경로의 재현 여부는 **VLAN 생성 이후 하위 NIC나 bond의 feature가 바뀐 적이 있는지**(`ethtool -K` 실행, bond slave 변화 등)에 달려 있다. macvlan과 bond에는 이런 이력 의존성이 없다.

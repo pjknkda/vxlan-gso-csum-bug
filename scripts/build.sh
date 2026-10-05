@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 # Build the guest-side binaries for one kernel release (sysroot from fetch-kernel.py):
 #   .cache/bin/burst                          static GRO feeder
+#   .cache/bin/tapinject                      static "VM behind a tap device" sender
 #   .cache/kmod/<release>/gso_entry_reseed.ko  tracing kprobe + optional fix (mode=1)
 #   .cache/kmod/<release>/gso_bench.ko         skb_gso_segment() microbenchmark
 #   .cache/kmod/<release>/vxlan_gso_csum_fix.ko
@@ -18,6 +19,7 @@ WORK=$ROOT/.cache/kmod-build/$REL
 
 mkdir -p "$ROOT/.cache/bin" "$OUT"
 gcc -O2 -Wall -static -o "$ROOT/.cache/bin/burst" "$ROOT/lab/tools/burst.c"
+gcc -O2 -Wall -static -o "$ROOT/.cache/bin/tapinject" "$ROOT/lab/tools/tapinject.c"
 
 CC=gcc
 kernel_gcc=$(sed -n 's/^CONFIG_GCC_VERSION=\([0-9]*\)/\1/p' "$HDR/.config")

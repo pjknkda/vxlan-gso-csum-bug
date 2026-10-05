@@ -60,7 +60,7 @@ def add_modules(guest, sysroot, release):
     for path in module_root.glob("modules.*"):
         if path.is_file():
             shutil.copy2(path, output_root / path.name)
-    names = ["veth", "bridge", "8021q", "macvlan", "vxlan", "igb", "bonding", "9p", "9pnet_virtio", "virtio_pci"]
+    names = ["veth", "bridge", "8021q", "macvlan", "vxlan", "igb", "bonding", "tun", "9p", "9pnet_virtio", "virtio_pci"]
     files = set()
     for name in names:
         result = command("modprobe", "-d", str(sysroot), "-S", release,
@@ -166,7 +166,8 @@ def main():
              (shutil.which("timeout"), "/bin/timeout"),
              (sysroot / "usr/sbin/ethtool", "/sbin/ethtool"),
              (sysroot / "usr/bin/iperf3", "/bin/iperf3"),
-             (burst, "/bin/burst")]
+             (burst, "/bin/burst"),
+             (CACHE / "bin/tapinject", "/bin/tapinject")]
     if not args.no_capture:
         tools.append((shutil.which("tcpdump"), "/bin/tcpdump"))
     for src, target in tools:
@@ -207,7 +208,7 @@ mount -t devtmpfs devtmpfs /dev
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mkdir -p /run/netns
-for module in virtio_pci 9pnet_virtio 9p veth bridge 8021q macvlan vxlan igb bonding; do
+for module in virtio_pci 9pnet_virtio 9p veth bridge 8021q macvlan vxlan igb bonding tun; do
     modprobe "$module" || { echo "VXGSO_GUEST_ERROR module=$module"; poweroff -f; }
 done
 mount -t 9p -o trans=virtio,version=9p2000.L output /output || {

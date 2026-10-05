@@ -46,6 +46,11 @@ BURST_LEN=${BURST_LEN:-1188}
 BURST_PROTO=${BURST_PROTO:-tcp}  # tcp or udp (inner traffic carried in VXLAN)
 NA_UDP_GRO_FWD=${NA_UDP_GRO_FWD:-}  # router NIC rx-udp-gro-forwarding on/off (empty: leave default)
 NA_GRO_LIST=${NA_GRO_LIST:-}        # router NIC rx-gro-list on/off (empty: leave default)
+# TRAFFIC=vm: a "VM" behind a tap device on the router sends TCP into the VXLAN tunnel.
+VM_TSO=${VM_TSO:-1}     # 1: the VM sends TSO frames (virtio GSO); 0: MSS-size frames
+VM_NAPI=${VM_NAPI:-0}   # 1: tap opened with IFF_NAPI, so tap RX goes through GRO
+VM_IP=192.0.2.2
+VM_GW=192.0.2.1
 NA_RX_USECS=${NA_RX_USECS:-}   # igb interrupt coalescing on the sender NIC (burst mode: one NAPI poll per burst)
 TRACE_FUNCS=${TRACE_FUNCS:-"skb_udp_tunnel_segment __skb_udp_tunnel_segment skb_segment __pskb_pull_tail skb_checksum_help"}
 TRACEFS=/sys/kernel/tracing
@@ -227,6 +232,15 @@ ip netns exec "$EVN" sysctl -qw net.ipv4.ip_forward=1
 ip netns exec "$EVN" sysctl -qw net.ipv4.conf.all.rp_filter=0
 ip netns exec "$EVN" sysctl -qw "net.ipv4.conf.$EVN_UL.rp_filter=0"
 ip netns exec "$EVN" sysctl -qw net.ipv4.conf.vxgso-test.rp_filter=0
+if [[ $TRAFFIC == vm ]]; then
+    VM_FLAGS=
+    if [[ $VM_NAPI == 1 ]]; then VM_FLAGS=-N; fi
+    ip netns exec "$EVN" tapinject -i vmtap0 -c $VM_FLAGS
+    ip -n "$EVN" addr add "$VM_GW/24" dev vmtap0
+    ip -n "$EVN" link set vmtap0 up
+    ip netns exec "$EVN" sysctl -qw net.ipv4.conf.vmtap0.rp_filter=0
+    FEATURE_DEVS+=("$EVN:vmtap0")
+fi
 
 # Receiver: [VLAN] -> VXLAN bridge -> veth -> separate iperf server namespace.
 ip -n "$COMPUTE_NS" link set nic0 mtu 9000 up
@@ -350,7 +364,14 @@ for tx in $TX_MODES; do
         before=$(csum_errors)
         read -r inner_err0 inner_rx0 <<<"$(inner_udp)"
         rc=0
-        if [[ $TRAFFIC == burst ]]; then
+        if [[ $TRAFFIC == vm ]]; then
+            tap_mac=$(ip netns exec "$EVN" cat /sys/class/net/vmtap0/address)
+            ip netns exec "$EVN" timeout 300 tapinject -i vmtap0 -s "$VM_IP" -d "$TESTIP" -m "$tap_mac" \
+                $VM_FLAGS $([[ $VM_TSO == 1 ]] && echo -G) -n "$BURST_SEGS" -b "$BURST_COUNT" \
+                >"$OUT/$label-vm.log" 2>&1 || rc=$?
+            cat "$OUT/$label-vm.log"
+            sleep 1
+        elif [[ $TRAFFIC == burst ]]; then
             na_mac=$(ip -n "$COMPUTE_NS" neigh show "$ME" dev "$CMP_UL" | awk '{print $3; exit}')
             ip netns exec "$COMPUTE_NS" timeout 300 burst -i "$CMP_UL" -s "$COMPUTE" -d "$TESTIP" \
                 -m "$na_mac" -n "$BURST_SEGS" -b "$BURST_COUNT" -l "$BURST_LEN" \
@@ -388,7 +409,7 @@ for tx in $TX_MODES; do
         if ((delta > 0)); then status=REPRODUCED; elif ((rc != 0)); then status=INCONCLUSIVE; fi
         printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(uname -r)" "$UNDERLAY" "$BOND" "$TRANSIT_MTU" "$segs" "$tx" "$RX_MODE" \
             "$delta" "$rc" "$status" "$((inner_err1 - inner_err0))" "$((inner_rx1 - inner_rx0))" | tee -a "$OUT/summary.tsv"
-        if [[ $TRAFFIC != burst ]]; then
+        if [[ $TRAFFIC == iperf ]]; then
             echo "VXGSO_JSON_BEGIN $label"
             cat "$OUT/$label-iperf.json"
             echo "VXGSO_JSON_END $label"
