@@ -1,0 +1,260 @@
+Subject: [PATCH] hw/net/igb: optional TX offload by context descriptor offsets
+
+Add an "x-desc-offload" property (default off). When on, TSE/TXSM
+descriptors are handled like the 82576 does: L4 starts at MACLEN + IPLEN,
+the TSO header is MACLEN + IPLEN + L4LEN, the IP header at MACLEN gets its
+length/ID and a checksum over the IPLEN range, and the L4 checksum is
+completed from the seed the driver left in place. Headers outside that
+range (e.g. the outer UDP header of a VXLAN frame) are not touched. The
+default path offloads the outermost L4 header it parses instead.
+
+Applies to QEMU 8.2.2 (patch -p1).
+
+SPDX-License-Identifier: GPL-2.0-or-later
+Copyright (c) 2026 Elice Inc.
+
+--- a/hw/net/igb.c
++++ b/hw/net/igb.c
+@@ -597,6 +597,8 @@
+ static Property igb_properties[] = {
+     DEFINE_NIC_PROPERTIES(IGBState, conf),
+     DEFINE_PROP_BOOL("x-pcie-flr-init", IGBState, has_flr, true),
++    /* Lab: honour context descriptor offsets for checksum/TSO offload. */
++    DEFINE_PROP_BOOL("x-desc-offload", IGBState, core.desc_offload, false),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+ 
+--- a/hw/net/igb_core.c
++++ b/hw/net/igb_core.c
+@@ -473,6 +473,158 @@
+         net_tx_pkt_setup_vlan_header_ex(tx->tx_pkt, vlan,
+             core->mac[VET] & 0xffff);
+     }
++    tx->vlan_inserted = insert_vlan;
++}
++
++/*
++ * Checksum/TSO offload driven by the advanced context descriptor, as the
++ * 82576 does it: L4 starts at MACLEN + IPLEN, the TSO header is
++ * MACLEN + IPLEN + L4LEN bytes, the IP header at MACLEN gets length/ID and
++ * a checksum over the whole IPLEN range, and the L4 checksum is completed
++ * from the pseudo-header seed the driver left in the checksum field.
++ *
++ * The generic net_tx_pkt path instead parses the frame itself and always
++ * offloads the *outermost* L4 header, which is wrong for encapsulated
++ * frames (Linux igb uses GSO_PARTIAL / CHECKSUM_PARTIAL on the inner one).
++ */
++static uint32_t igb_csum_add(uint32_t sum, const uint8_t *p, size_t len)
++{
++    size_t i;
++
++    for (i = 0; i + 1 < len; i += 2) {
++        sum += (p[i] << 8) | p[i + 1];
++    }
++    if (len & 1) {
++        sum += p[len - 1] << 8;
++    }
++    return sum;
++}
++
++static uint16_t igb_csum_fold(uint32_t sum)
++{
++    while (sum >> 16) {
++        sum = (sum & 0xffff) + (sum >> 16);
++    }
++    return ~sum & 0xffff;
++}
++
++static void igb_desc_l4_csum(uint8_t *frame, size_t len, size_t l4off,
++                             bool tcp)
++{
++    size_t field = l4off + (tcp ? 16 : 6);
++    uint16_t csum;
++
++    if (field + 2 > len) {
++        return;
++    }
++    /* The field holds the pseudo-header seed (without length for TSO). */
++    csum = igb_csum_fold(igb_csum_add(0, frame + l4off, len - l4off));
++    if (!tcp && csum == 0) {
++        csum = 0xffff;
++    }
++    stw_be_p(frame + field, csum);
++}
++
++static bool
++igb_tx_desc_offload_send(IGBCore *core, struct igb_tx *tx, NetClientState *nc)
++{
++    uint32_t idx = (tx->first_olinfo_status >> 4) & 1;
++    uint32_t lens = tx->ctx[idx].vlan_macip_lens;
++    uint32_t tucmd = tx->ctx[idx].type_tucmd_mlhl;
++    uint32_t mli = tx->ctx[idx].mss_l4len_idx;
++    size_t maclen = (lens >> E1000_ADVTXD_MACLEN_SHIFT) & 0x7f;
++    size_t iplen = lens & 0x1ff;
++    size_t total = net_tx_pkt_get_total_len(tx->tx_pkt);
++    bool tcp = tucmd & E1000_ADVTXD_TUCMD_L4T_TCP;
++    bool ipv4 = tucmd & E1000_ADVTXD_TUCMD_IPV4;
++    size_t l4off, hdrlen, paylen, mss, off;
++    uint8_t *frame, *seg;
++    uint16_t ipid;
++    uint32_t seq;
++    bool ok = true;
++
++    if (tx->vlan_inserted) {
++        maclen += sizeof(struct vlan_header);
++    }
++    l4off = maclen + iplen;
++
++    frame = g_malloc(total);
++    if (net_tx_pkt_copy_frame(tx->tx_pkt, frame, total) != total ||
++        l4off >= total) {
++        g_free(frame);
++        return false;
++    }
++
++    if (!(tx->first_cmd_type_len & E1000_ADVTXD_DCMD_TSE)) {
++        if (tx->first_olinfo_status & E1000_ADVTXD_POTS_IXSM && ipv4) {
++            size_t ihl = (frame[maclen] & 0xf) * 4;
++
++            stw_be_p(frame + maclen + 10, 0);
++            stw_be_p(frame + maclen + 10,
++                     igb_csum_fold(igb_csum_add(0, frame + maclen, ihl)));
++        }
++        if (tx->first_olinfo_status & E1000_ADVTXD_POTS_TXSM) {
++            igb_desc_l4_csum(frame, total, l4off, tcp);
++        }
++        ok = qemu_send_packet(nc, frame, total) >= 0;
++        g_free(frame);
++        return ok;
++    }
++
++    mss = mli >> E1000_ADVTXD_MSS_SHIFT;
++    hdrlen = l4off + ((mli >> E1000_ADVTXD_L4LEN_SHIFT) & 0xff);
++    if (!mss || hdrlen > total) {
++        g_free(frame);
++        return false;
++    }
++    paylen = total - hdrlen;
++    ipid = lduw_be_p(frame + maclen + 4);
++    seq = ldl_be_p(frame + l4off + 4);
++    seg = g_malloc(hdrlen + mss);
++
++    off = 0;
++    do {
++        size_t plen = MIN(mss, paylen - off);
++        size_t seglen = hdrlen + plen;
++        bool last = off + plen >= paylen;
++
++        memcpy(seg, frame, hdrlen);
++        memcpy(seg + hdrlen, frame + hdrlen + off, plen);
++
++        if (ipv4) {
++            /* Driver pre-cancels any bytes between IP header and IPLEN. */
++            stw_be_p(seg + maclen + 2, seglen - maclen);
++            stw_be_p(seg + maclen + 4, ipid++);
++            stw_be_p(seg + maclen + 10,
++                     igb_csum_fold(igb_csum_add(0, seg + maclen, iplen)));
++        } else {
++            stw_be_p(seg + maclen + 4, seglen - maclen - 40);
++        }
++
++        if (tcp) {
++            stl_be_p(seg + l4off + 4, seq + off);
++            if (!last) {
++                seg[l4off + 13] &= ~(0x01 | 0x08); /* FIN, PSH */
++            }
++        } else {
++            stw_be_p(seg + l4off + 4, seglen - l4off);
++        }
++        /* Seed has no length for TSO; add this segment's L4 length. */
++        stw_be_p(seg + l4off + (tcp ? 16 : 6),
++                 ~igb_csum_fold(lduw_be_p(seg + l4off + (tcp ? 16 : 6)) +
++                                (uint32_t)(seglen - l4off)) & 0xffff);
++        igb_desc_l4_csum(seg, seglen, l4off, tcp);
++
++        if (qemu_send_packet(nc, seg, seglen) < 0) {
++            ok = false;
++        }
++        off += plen;
++    } while (off < paylen);
++
++    e1000x_inc_reg_if_not_full(core->mac, TSCTC);
++    g_free(seg);
++    g_free(frame);
++    return ok;
+ }
+ 
+ static bool
+@@ -566,6 +718,17 @@
+ {
+     int target_queue = MIN(core->max_queue_num, queue_index);
+     NetClientState *queue = qemu_get_subqueue(core->owner_nic, target_queue);
++    uint32_t idx = (tx->first_olinfo_status >> 4) & 1;
++
++    if (core->desc_offload &&
++        ((tx->first_cmd_type_len & E1000_ADVTXD_DCMD_TSE) ||
++         (tx->first_olinfo_status & E1000_ADVTXD_POTS_TXSM)) &&
++        !(tx->ctx[idx].type_tucmd_mlhl & E1000_ADVTXD_TUCMD_L4T_SCTP) &&
++        !(core->phy[MII_BMCR] & MII_BMCR_LOOPBACK) &&
++        (core->mac[RCTL] & E1000_RCTL_LBM_MAC) != E1000_RCTL_LBM_MAC &&
++        !(core->mac[MRQC] & 1)) {
++        return igb_tx_desc_offload_send(core, tx, queue);
++    }
+ 
+     if (!igb_setup_tx_offloads(core, tx)) {
+         return false;
+--- a/hw/net/igb_core.h
++++ b/hw/net/igb_core.h
+@@ -79,6 +79,7 @@
+ 
+         bool first;
+         bool skip_cp;
++        bool vlan_inserted;
+ 
+         struct NetTxPkt *tx_pkt;
+     } tx[IGB_NUM_QUEUES];
+@@ -86,6 +87,7 @@
+     struct NetRxPkt *rx_pkt;
+ 
+     bool has_vnet;
++    bool desc_offload;
+     int max_queue_num;
+ 
+     IGBIntrDelayTimer eitr[IGB_INTR_NUM];
+--- a/hw/net/net_tx_pkt.c
++++ b/hw/net/net_tx_pkt.c
+@@ -424,6 +424,15 @@
+     return pkt->packet_type;
+ }
+ 
++size_t net_tx_pkt_copy_frame(struct NetTxPkt *pkt, void *buf, size_t size)
++{
++    assert(pkt);
++
++    return iov_to_buf(&pkt->vec[NET_TX_PKT_L2HDR_FRAG],
++                      pkt->payload_frags + NET_TX_PKT_PL_START_FRAG - 1,
++                      0, buf, size);
++}
++
+ size_t net_tx_pkt_get_total_len(struct NetTxPkt *pkt)
+ {
+     assert(pkt);
+--- a/hw/net/net_tx_pkt.h
++++ b/hw/net/net_tx_pkt.h
+@@ -134,6 +134,16 @@
+ size_t net_tx_pkt_get_total_len(struct NetTxPkt *pkt);
+ 
+ /**
++ * Copy the whole frame (L2 header onwards, after VLAN insertion) to buf.
++ *
++ * @pkt:            packet
++ * @buf:            destination
++ * @size:           size of buf
++ * @ret:            bytes copied
++ */
++size_t net_tx_pkt_copy_frame(struct NetTxPkt *pkt, void *buf, size_t size);
++
++/**
+  * get packet type
+  *
+  * @pkt:            packet

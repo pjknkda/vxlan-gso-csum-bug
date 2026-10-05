@@ -1,0 +1,21 @@
+Copyright (c) 2026 Elice Inc.
+
+This repository contains files under different licenses. Each source file
+states its license with an SPDX-License-Identifier line; the full texts are in
+LICENSES/.
+
+  GPL-2.0-only       Code derived from or loaded into the Linux kernel:
+                       fix/udp-gso-fix.patch
+                       fix/dkms/
+                       fix/livepatch-6.8.0-100/
+                       lab/kmod/
+
+  GPL-2.0-or-later   Changes to QEMU (QEMU's igb/net_tx_pkt sources are
+                     GPL-2.0-or-later and LGPL-2.1-or-later):
+                       lab/qemu/igb-desc-offload.patch
+
+  MIT                Everything else: scripts/, the rest of lab/,
+                     documentation (README*, docs/).
+
+LICENSES/GPL-2.0 is the text of the GNU General Public License version 2,
+which also applies to "or later" files under the terms stated above.

@@ -1,0 +1,42 @@
+### base (rc=0)
+  tx=on  UdpInCsumErrors=  7675 REPRODUCED
+  tx=off UdpInCsumErrors=  7719 REPRODUCED
+  split_reason split=395
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=5
+  non-seed re-entries: calls=1182 ~segs=15366
+### udp (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### udp-gro-fwd (rc=0)
+  tx=on  UdpInCsumErrors=  7722 REPRODUCED inner_udp: delivered=278 csum_err=0
+  tx=off UdpInCsumErrors=  7601 REPRODUCED inner_udp: delivered=399 csum_err=0
+  split_reason split=393
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=7
+  non-seed re-entries: calls=1176 ~segs=15288
+### udp-gro-list (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### fix-udp-gro-fwd (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  split_reason split=374
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=26
+  non-seed re-entries: calls=1090 ~segs=14170
+### fix-udp-gro-list (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED inner_udp: delivered=8000 csum_err=0
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0

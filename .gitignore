@@ -1,0 +1,7 @@
+# Downloads and builds made by scripts/ (kernels, QEMU, toolchains, modules)
+/.cache/
+# Run outputs (initramfs, pcaps, serial logs) from lab/*.py
+/results/
+# Pre-restructure workspace kept locally; not part of the repository
+/old/
+__pycache__/

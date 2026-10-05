@@ -1,0 +1,79 @@
+### base (rc=0)
+  tx=on  UdpInCsumErrors=  7170 REPRODUCED
+  tx=off UdpInCsumErrors=  7330 REPRODUCED
+  split_reason split=372
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=31
+  non-seed re-entries: calls=1107 ~segs=14391
+### fix (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=317
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=84
+  non-seed re-entries: calls=894 ~segs=11622
+### vxlan-tso-off (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### gso-max-segs-13 (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### base+iperf (rc=0)
+  tx=on  UdpInCsumErrors=  3347 REPRODUCED iperf=199Mbps retrans=3347
+  tx=off UdpInCsumErrors=  2648 REPRODUCED iperf=179Mbps retrans=2684
+  split_reason split=163
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=9860
+  non-seed re-entries: calls=341 ~segs=5797
+### fix+iperf (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED iperf=214Mbps retrans=1097
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED iperf=247Mbps retrans=712
+  split_reason split=3915
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=6776
+  non-seed re-entries: calls=11090 ~segs=166350
+### vxlan-tso-off+iperf (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED iperf=250Mbps retrans=651
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED iperf=267Mbps retrans=1093
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### gso-max-segs-13+iperf (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED iperf=271Mbps retrans=458
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED iperf=261Mbps retrans=796
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+
+######## 7.0.0-38-generic
+### base (rc=0)
+  tx=on  UdpInCsumErrors=  7757 REPRODUCED
+  tx=off UdpInCsumErrors=  7799 REPRODUCED
+  split_reason split=399
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=1
+  non-seed re-entries: calls=1196 ~segs=14948
+### fix (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=398
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=2
+  non-seed re-entries: calls=1193 ~segs=14915
+### vxlan-tso-off (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0

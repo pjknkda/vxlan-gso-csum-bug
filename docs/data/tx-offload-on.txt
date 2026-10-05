@@ -1,0 +1,371 @@
+### base (rc=0)
+  tx=on  UdpInCsumErrors=   930 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 4772 11
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 4577 26
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 56 16
+  split_reason split=25
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=4552
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 94
+  shist split 18(0,17) 18(0,17) 1 18 36 | 12
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 450
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 364
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 331
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 364
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 328
+  shist head_len_mismatch 18(0,17) 6(0,5) 1 6 24 | 303
+  shist head_len_mismatch 18(0,17) 7(0,6) 1 7 25 | 171
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 62
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 142
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 394
+  shist split 18(0,17) 18(0,17) 2 10 46 | 2
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 432
+  shist split 18(0,17) 18(0,17) 2 3 39 | 2
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 121
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 85
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 431
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 247
+  shist split 18(0,17) 18(0,17) 2 1 37 | 7
+  shist head_len_mismatch 18(0,17) 8(0,7) 1 8 26 | 89
+  shist head_len_mismatch 18(0,17) 3(664,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 7(196,6) 1 7 25 | 22
+  shist head_len_mismatch 18(0,17) 8(296,7) 1 8 26 | 1
+  shist head_len_mismatch 18(0,17) 5(196,4) 1 5 23 | 19
+  shist head_len_mismatch 18(0,17) 6(196,5) 1 6 24 | 26
+  shist head_len_mismatch 18(0,17) 4(196,3) 1 4 22 | 3
+  shist head_len_mismatch 18(0,17) 10(392,9) 1 10 28 | 2
+  shist head_len_mismatch 18(0,17) 2(748,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 9(196,8) 1 9 27 | 7
+  shist head_len_mismatch 18(0,17) 9(392,8) 1 9 27 | 1
+  shist head_len_mismatch 18(0,17) 6(564,5) 1 6 24 | 1
+  shist head_len_mismatch 18(0,17) 8(196,7) 1 8 26 | 23
+  shist head_len_mismatch 18(0,17) 13(196,12) 1 13 31 | 1
+  shist head_len_mismatch 18(0,17) 11(196,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 3(196,2) 1 3 21 | 8
+  shist head_len_mismatch 18(0,17) 4(956,3) 1 4 22 | 1
+  shist head_len_mismatch 18(0,17) 1(176,0) 1 1 19 | 1
+  shist head_len_mismatch 18(0,17) 1(896,0) 1 1 19 | 1
+  shist head_len_mismatch 18(0,17) 2(196,1) 1 2 20 | 5
+  shist head_len_mismatch 18(0,17) 1(196,0) 1 1 19 | 2
+  shist head_len_mismatch 18(0,17) 5(604,4) 1 5 23 | 1
+  shist head_len_mismatch 18(0,17) 6(984,5) 1 6 24 | 1
+  shist head_len_mismatch 18(0,17) 8(392,7) 1 8 26 | 3
+  shist head_len_mismatch 18(0,17) 5(392,4) 1 5 23 | 1
+  shist split 18(0,17) 18(0,17) 2 2 38 | 2
+  shist head_len_mismatch 18(0,17) 10(196,9) 1 10 28 | 5
+  shist head_len_mismatch 18(0,17) 1(392,0) 1 1 19 | 2
+  shist head_len_mismatch 18(0,17) 6(712,5) 1 6 24 | 1
+  shist head_len_mismatch 18(0,17) 4(392,3) 1 4 22 | 2
+  shist head_len_mismatch 18(0,17) 6(368,5) 1 6 24 | 1
+  => non-canonical re-entries: calls=56 ~segs=896
+
+### fix (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 6191 11
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 4682 25
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 732 15
+  split_reason split=262
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=4420
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 378
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 171
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 171
+  shist split 18(0,17) 18(0,17) 2 12 48 | 11
+  shist head_len_mismatch 18(0,17) 7(0,6) 1 7 25 | 222
+  shist split 18(0,17) 18(0,17) 2 6 42 | 19
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 76
+  shist head_len_mismatch 18(0,17) 8(0,7) 1 8 26 | 168
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 323
+  shist split 18(0,17) 18(0,17) 2 1 37 | 19
+  shist split 18(0,17) 18(0,17) 2 18 54 | 28
+  shist split 18(0,17) 18(0,17) 1 18 36 | 35
+  shist head_len_mismatch 18(0,17) 5(640,4) 1 5 23 | 1
+  shist head_len_mismatch 18(0,17) 6(0,5) 1 6 24 | 455
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 28
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 437
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 461
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 269
+  shist head_len_mismatch 18(0,17) 1(1176,0) 1 1 19 | 1
+  shist split 18(0,17) 18(0,17) 2 9 45 | 9
+  shist split 18(0,17) 18(0,17) 2 13 49 | 24
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 161
+  shist head_len_mismatch 18(0,17) 3(824,2) 1 3 21 | 1
+  shist split 18(0,17) 18(0,17) 2 14 50 | 7
+  shist split 18(0,17) 18(0,17) 2 15 51 | 8
+  shist split 18(0,17) 18(0,17) 2 7 43 | 13
+  shist split 18(0,17) 18(0,17) 2 11 47 | 13
+  shist split 18(0,17) 18(0,17) 2 8 44 | 10
+  shist split 18(0,17) 18(0,17) 2 4 40 | 24
+  shist split 18(0,17) 18(0,17) 2 2 38 | 6
+  shist split 18(0,17) 18(0,17) 2 5 41 | 14
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 20
+  shist head_len_mismatch 18(0,17) 10(588,9) 1 10 28 | 1
+  shist split 18(0,17) 18(0,17) 2 17 53 | 2
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 401
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 566
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 82
+  shist head_len_mismatch 18(0,17) 2(24,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 12(664,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 3(412,2) 1 3 21 | 1
+  shist split 18(0,17) 18(0,17) 2 3 39 | 11
+  shist head_len_mismatch 18(0,17) 3(364,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 5(196,4) 1 5 23 | 2
+  shist split 18(0,17) 18(0,17) 2 10 46 | 9
+  shist head_len_mismatch 18(0,17) 6(196,5) 1 6 24 | 4
+  shist head_len_mismatch 18(0,17) 2(392,1) 1 2 20 | 4
+  shist head_len_mismatch 18(0,17) 12(1152,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 10(1152,9) 1 10 28 | 1
+  shist head_len_mismatch 18(0,17) 1(392,0) 1 1 19 | 1
+  shist head_len_mismatch 18(0,17) 2(396,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 2(868,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 3(188,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 10(196,9) 1 10 28 | 1
+  shist head_len_mismatch 18(0,17) 8(196,7) 1 8 26 | 1
+  shist head_len_mismatch 18(0,17) 9(196,8) 1 9 27 | 1
+  shist head_len_mismatch 18(0,17) 6(392,5) 1 6 24 | 1
+  shist head_len_mismatch 18(0,17) 3(196,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 8(392,7) 1 8 26 | 1
+  shist head_len_mismatch 18(0,17) 4(392,3) 1 4 22 | 1
+  => non-canonical re-entries: calls=732 ~segs=10980
+
+### base+burst (rc=0)
+  tx=on  UdpInCsumErrors=  7166 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 200 37
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 510 14
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 102 3
+  split_reason split=189
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=11
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 98
+  shist split 18(0,17) 18(0,17) 2 1 37 | 42
+  shist split 18(0,17) 18(0,17) 2 2 38 | 34
+  shist split 18(0,17) 18(0,17) 1 18 36 | 15
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 5
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 2
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 2
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  => non-canonical re-entries: calls=510 ~segs=7140
+
+### fix+burst (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 200 38
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 592 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 6 6
+  split_reason split=198
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=2
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 192
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  shist split 18(0,17) 18(0,17) 1 18 36 | 2
+  shist split 18(0,17) 18(0,17) 2 4 40 | 3
+  shist split 18(0,17) 18(0,17) 2 2 38 | 1
+  => non-canonical re-entries: calls=592 ~segs=7696
+
+### mangleid (rc=0)
+  tx=on  UdpInCsumErrors=  1177 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 1 0 1 | 1 1 1 1 0 0 | 2708 9
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 5315 27
+  hist nic0 0x801 3 1 1 1 0 0 | 1 1 1 1 0 0 | 70 16
+  split_reason split=32
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=5283
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 157
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 476
+  shist head_len_mismatch 18(0,17) 9(392,8) 1 9 27 | 3
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 265
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 619
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 109
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 230
+  shist split 18(0,17) 18(0,17) 2 8 44 | 1
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 385
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 436
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 143
+  shist split 18(0,17) 18(0,17) 2 4 40 | 1
+  shist split 18(0,17) 18(0,17) 2 3 39 | 1
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 170
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 184
+  shist split 18(0,17) 18(0,17) 2 1 37 | 4
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 134
+  shist head_len_mismatch 18(0,17) 8(0,7) 1 8 26 | 121
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 369
+  shist head_len_mismatch 18(0,17) 6(0,5) 1 6 24 | 236
+  shist head_len_mismatch 18(0,17) 6(392,5) 1 6 24 | 6
+  shist split 18(0,17) 18(0,17) 1 18 36 | 22
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 720
+  shist head_len_mismatch 18(0,17) 7(196,6) 1 7 25 | 43
+  shist head_len_mismatch 18(0,17) 10(196,9) 1 10 28 | 30
+  shist head_len_mismatch 18(0,17) 6(196,5) 1 6 24 | 49
+  shist head_len_mismatch 18(0,17) 4(196,3) 1 4 22 | 43
+  shist head_len_mismatch 18(0,17) 3(196,2) 1 3 21 | 36
+  shist head_len_mismatch 18(0,17) 5(196,4) 1 5 23 | 55
+  shist head_len_mismatch 18(0,17) 1(196,0) 1 1 19 | 3
+  shist head_len_mismatch 18(0,17) 8(196,7) 1 8 26 | 53
+  shist head_len_mismatch 18(0,17) 15(196,14) 1 15 33 | 1
+  shist head_len_mismatch 18(0,17) 2(196,1) 1 2 20 | 12
+  shist head_len_mismatch 18(0,17) 9(196,8) 1 9 27 | 12
+  shist head_len_mismatch 18(0,17) 5(392,4) 1 5 23 | 7
+  shist head_len_mismatch 18(0,17) 7(0,6) 1 7 25 | 149
+  shist head_len_mismatch 18(0,17) 3(1152,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 2(576,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 9(380,8) 1 9 27 | 1
+  shist split 18(0,17) 18(0,17) 2 2 38 | 2
+  shist split 18(0,17) 18(0,17) 2 6 42 | 1
+  shist head_len_mismatch 18(0,17) 7(392,6) 1 7 25 | 2
+  shist head_len_mismatch 18(0,17) 4(516,3) 1 4 22 | 1
+  shist head_len_mismatch 18(0,17) 3(552,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 12(392,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 12(196,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 11(392,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 3(664,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 11(196,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 4(712,3) 1 4 22 | 1
+  shist head_len_mismatch 18(0,17) 2(392,1) 1 2 20 | 3
+  shist head_len_mismatch 18(0,17) 15(1164,14) 1 15 33 | 1
+  shist head_len_mismatch 18(0,17) 2(376,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 3(392,2) 1 3 21 | 4
+  shist head_len_mismatch 18(0,17) 4(392,3) 1 4 22 | 1
+  shist head_len_mismatch 18(0,17) 2(588,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 1(392,0) 1 1 19 | 2
+  shist head_len_mismatch 18(0,17) 4(368,3) 1 4 22 | 1
+  => non-canonical re-entries: calls=70 ~segs=1120
+
+### fix-mangleid (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 1 0 1 | 1 1 1 1 0 0 | 4448 11
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 4815 26
+  hist nic0 0x801 3 1 1 1 0 0 | 1 1 1 1 0 0 | 254 15
+  split_reason split=107
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=4708
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 379
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 269
+  shist head_len_mismatch 18(0,17) 5(1004,4) 1 5 23 | 1
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 62
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 364
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 789
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 315
+  shist head_len_mismatch 18(0,17) 6(0,5) 1 6 24 | 308
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 380
+  shist head_len_mismatch 18(0,17) 7(0,6) 1 7 25 | 107
+  shist head_len_mismatch 18(0,17) 8(0,7) 1 8 26 | 67
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 58
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 100
+  shist head_len_mismatch 18(0,17) 7(196,6) 1 7 25 | 8
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 415
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 617
+  shist head_len_mismatch 18(0,17) 11(368,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 275
+  shist head_len_mismatch 18(0,17) 5(196,4) 1 5 23 | 4
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 107
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 42
+  shist head_len_mismatch 18(0,17) 3(196,2) 1 3 21 | 6
+  shist split 18(0,17) 18(0,17) 1 18 36 | 45
+  shist split 18(0,17) 18(0,17) 2 2 38 | 16
+  shist split 18(0,17) 18(0,17) 2 3 39 | 14
+  shist head_len_mismatch 18(0,17) 6(196,5) 1 6 24 | 10
+  shist head_len_mismatch 18(0,17) 2(196,1) 1 2 20 | 8
+  shist split 18(0,17) 18(0,17) 2 1 37 | 22
+  shist head_len_mismatch 18(0,17) 1(196,0) 1 1 19 | 3
+  shist head_len_mismatch 18(0,17) 13(196,12) 1 13 31 | 1
+  shist head_len_mismatch 18(0,17) 10(196,9) 1 10 28 | 2
+  shist head_len_mismatch 18(0,17) 6(392,5) 1 6 24 | 1
+  shist head_len_mismatch 18(0,17) 4(196,3) 1 4 22 | 5
+  shist head_len_mismatch 18(0,17) 2(784,1) 1 2 20 | 1
+  shist head_len_mismatch 18(0,17) 4(392,3) 1 4 22 | 1
+  shist split 18(0,17) 18(0,17) 2 4 40 | 3
+  shist split 18(0,17) 18(0,17) 2 6 42 | 2
+  shist split 18(0,17) 18(0,17) 2 7 43 | 1
+  shist split 18(0,17) 18(0,17) 2 5 41 | 4
+  shist head_len_mismatch 18(0,17) 8(196,7) 1 8 26 | 1
+  shist head_len_mismatch 18(0,17) 4(124,3) 1 4 22 | 1
+  => non-canonical re-entries: calls=254 ~segs=3810
+
+### mangleid+burst (rc=0)
+  tx=on  UdpInCsumErrors=  7511 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 199 38
+  hist nic0 0x801 3 1 1 1 0 0 | 1 1 1 1 0 0 | 574 13
+  hist nic0 0x801 3 1 0 1 0 1 | 1 1 1 1 0 0 | 15 8
+  split_reason split=193
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=6
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 185
+  shist split 18(0,17) 18(0,17) 2 4 40 | 1
+  shist split 18(0,17) 18(0,17) 1 18 36 | 3
+  shist split 18(0,17) 18(0,17) 2 2 38 | 2
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 2
+  shist head_len_mismatch 18(0,17) 7(0,6) 1 7 25 | 2
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 1
+  shist split 18(0,17) 18(0,17) 2 1 37 | 2
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 1
+  => non-canonical re-entries: calls=574 ~segs=7462
+
+### fix-mangleid+burst (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 200 37
+  hist nic0 0x801 3 1 1 1 0 0 | 1 1 1 1 0 0 | 506 13
+  hist nic0 0x801 3 1 0 1 0 1 | 1 1 1 1 0 0 | 77 3
+  split_reason split=182
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=18
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 123
+  shist split 18(0,17) 18(0,17) 2 1 37 | 28
+  shist split 18(0,17) 18(0,17) 1 18 36 | 12
+  shist split 18(0,17) 18(0,17) 2 2 38 | 19
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 3
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 7
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 4
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 1
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  => non-canonical re-entries: calls=506 ~segs=6578

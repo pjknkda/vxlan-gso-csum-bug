@@ -1,0 +1,52 @@
+Subject: [PATCH] udp: normalise outer checksum when re-segmenting a UDP tunnel GSO skb
+
+A UDP tunnel GSO skb produced by an earlier segmentation pass (for example
+skb_segment() splitting a GRO frag_list skb into several GSO skbs on a
+device without NETIF_F_FRAGLIST) has encap_hdr_csum set and carries a
+completed outer UDP checksum. When a lower device segments it again in
+software, __skb_udp_tunnel_segment() treats that value as the
+pseudo-header seed and every resulting segment gets a wrong outer UDP
+checksum. Rewrite the field to the seed before it is consumed.
+
+See docs/REPORT.md in this repository for the analysis and reproducer.
+
+SPDX-License-Identifier: GPL-2.0
+Copyright (c) 2026 Elice Inc.
+
+--- a/net/ipv4/udp_offload.c
++++ b/net/ipv4/udp_offload.c
+@@ -9,6 +9,7 @@
+ #include <linux/skbuff.h>
+ #include <net/gro.h>
+ #include <net/gso.h>
++#include <net/ip6_checksum.h>
+ #include <net/udp.h>
+ #include <net/protocol.h>
+ #include <net/inet_common.h>
+@@ -33,6 +34,26 @@
+ 	if (unlikely(!pskb_may_pull(skb, tnl_hlen)))
+ 		goto out;
+ 
++	/*
++	 * An intermediate UDP tunnel GSO skb may be segmented again.
++	 * Normalize the outer UDP checksum to the pseudo-header seed
++	 * expected by the checksum adjustment below.
++	 */
++	if ((skb_shinfo(skb)->gso_type & SKB_GSO_UDP_TUNNEL_CSUM) &&
++	    skb->encap_hdr_csum) {
++		if (is_ipv6) {
++			const struct ipv6hdr *ip6h = ipv6_hdr(skb);
++
++			uh->check = ~udp_v6_check(skb->len, &ip6h->saddr,
++						 &ip6h->daddr, 0);
++		} else {
++			const struct iphdr *iph = ip_hdr(skb);
++
++			uh->check = ~udp_v4_check(skb->len, iph->saddr,
++						 iph->daddr, 0);
++		}
++	}
++
+ 	/* Adjust partial header checksum to negate old length.
+ 	 * We cannot rely on the value contained in uh->len as it is
+ 	 * possible that the actual value exceeds the boundaries of the

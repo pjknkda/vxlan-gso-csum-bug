@@ -1,0 +1,436 @@
+### path-macvlan-vlan-nic (rc=0)
+  tx=on  UdpInCsumErrors=  7204 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7295 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 545 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 43 3
+  hist vlan444 0x801 3 1 0 0 0 1 | 0 0 0 0 0 0 | 51 3
+  hist vlan444 0x801 3 1 1 0 0 0 | 0 0 0 0 0 0 | 545 13
+  split_reason split=375
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=25
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 293
+  shist split 18(0,17) 18(0,17) 2 4 40 | 13
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 9
+  shist split 18(0,17) 18(0,17) 1 18 36 | 14
+  shist split 18(0,17) 18(0,17) 2 1 37 | 21
+  shist split 18(0,17) 18(0,17) 2 2 38 | 34
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 3
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 5
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 3
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 1
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 3
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 1
+  => non-canonical re-entries: calls=1090 ~segs=14170
+
+### path-macvlan-nic (rc=0)
+  tx=on  UdpInCsumErrors=  7678 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7605 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 590 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 8 5
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 0 1 0 0 | 583 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 8 7
+  split_reason split=392
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=8
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 375
+  shist split 18(0,17) 18(0,17) 1 18 36 | 2
+  shist split 18(0,17) 18(0,17) 2 2 38 | 5
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 1
+  shist split 18(0,17) 18(0,17) 2 4 40 | 9
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 1
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 3
+  shist split 18(0,17) 18(0,17) 2 1 37 | 1
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 1
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 1
+  => non-canonical re-entries: calls=1173 ~segs=15249
+
+### path-vlan-nic (rc=0)
+  tx=on  UdpInCsumErrors=  7385 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 200 38
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 561 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 51 3
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 0 0 0 0 0 | 200 38
+  hist vlan444 0x801 3 1 0 0 0 1 | 0 0 0 0 0 0 | 41 3
+  split_reason split=191
+  split_reason no_sg_or_csum=200
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=9
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 147
+  shist split 18(0,17) 18(0,17) 2 2 38 | 30
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 5
+  shist split 18(0,17) 18(0,17) 2 4 40 | 2
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 1
+  shist split 18(0,17) 18(0,17) 2 1 37 | 9
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 2
+  shist split 18(0,17) 18(0,17) 1 18 36 | 3
+  shist head_len_mismatch 18(0,17) 6(0,5) 1 6 24 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 150
+  shist no_sg_or_csum 18(0,17) 16(0,15) 1 16 34 | 3
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 2 38 | 16
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 4 40 | 8
+  shist no_sg_or_csum 18(0,17) 18(0,17) 1 18 36 | 8
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 1 37 | 9
+  shist no_sg_or_csum 18(0,17) 11(0,10) 1 11 29 | 1
+  shist no_sg_or_csum 18(0,17) 15(0,14) 1 15 33 | 1
+  shist no_sg_or_csum 18(0,17) 17(0,16) 1 17 35 | 3
+  shist no_sg_or_csum 18(0,17) 13(0,12) 1 13 31 | 1
+  => non-canonical re-entries: calls=561 ~segs=7293
+
+### path-nic (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 0 1 1 | 0 0 1 1 0 0 | 200 38
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 83 3
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 91 4
+  hist nic0 0x801 3 1 0 0 1 1 | 0 0 0 1 0 0 | 201 37
+  split_reason split=0
+  split_reason no_sg_or_csum=201
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=200
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=0
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 3 39 | 114
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 2 38 | 43
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 1 37 | 16
+  shist net_gso_not_ok 18(0,17) 16(0,15) 1 16 34 | 3
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 4 40 | 3
+  shist net_gso_not_ok 18(0,17) 15(0,14) 1 15 33 | 2
+  shist net_gso_not_ok 18(0,17) 18(0,17) 1 18 36 | 7
+  shist net_gso_not_ok 18(0,17) 14(0,13) 1 14 32 | 1
+  shist net_gso_not_ok 18(0,17) 17(0,16) 1 17 35 | 8
+  shist net_gso_not_ok 18(0,17) 9(0,8) 1 9 27 | 1
+  shist net_gso_not_ok 18(0,17) 7(0,6) 1 7 25 | 1
+  shist net_gso_not_ok 18(0,17) 11(0,10) 1 11 29 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 1 37 | 27
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 2 38 | 21
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 97
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 4 40 | 11
+  shist no_sg_or_csum 18(0,17) 13(0,12) 1 13 31 | 1
+  shist no_sg_or_csum 18(0,17) 17(0,16) 1 17 35 | 11
+  shist no_sg_or_csum 18(0,17) 18(0,17) 1 18 36 | 17
+  shist no_sg_or_csum 18(0,17) 11(0,10) 1 11 29 | 1
+  shist no_sg_or_csum 18(0,17) 14(0,13) 1 14 32 | 3
+  shist no_sg_or_csum 18(0,17) 12(0,11) 1 12 30 | 2
+  shist no_sg_or_csum 18(0,17) 6(0,5) 1 6 24 | 2
+  shist no_sg_or_csum 18(0,17) 4(0,3) 1 4 22 | 2
+  shist no_sg_or_csum 18(0,17) 15(0,14) 1 15 33 | 2
+  shist no_sg_or_csum 18(0,17) 16(0,15) 1 16 34 | 2
+  shist no_sg_or_csum 18(0,17) 1(0,0) 1 1 19 | 1
+  shist no_sg_or_csum 18(0,17) 3(0,2) 1 3 21 | 1
+  => non-canonical re-entries: calls=0 ~segs=0
+
+### path-macvlan-vlan-bond-nic (rc=0)
+  tx=on  UdpInCsumErrors=  7451 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7372 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 1 0 0 | 0 0 1 1 0 0 | 559 13
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 1 1 0 0 | 46 3
+  hist nic0 0x801 3 1 1 1 0 0 | 0 0 0 1 0 0 | 549 13
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 0 1 0 0 | 50 3
+  split_reason split=384
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=16
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 289
+  shist split 18(0,17) 18(0,17) 2 4 40 | 15
+  shist split 18(0,17) 18(0,17) 2 2 38 | 36
+  shist split 18(0,17) 18(0,17) 2 1 37 | 27
+  shist split 18(0,17) 18(0,17) 1 18 36 | 17
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 3
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 1
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 3
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 7
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 1
+  => non-canonical re-entries: calls=1108 ~segs=14404
+
+### path-vlan-bond-nic (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 1 1 0 1 0 | 400 38
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 1 1 0 0 | 11 8
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 0 1 0 0 | 4 5
+  split_reason split=0
+  split_reason no_sg_or_csum=400
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=0
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 362
+  shist no_sg_or_csum 18(0,17) 18(0,17) 1 18 36 | 2
+  shist no_sg_or_csum 18(0,17) 10(0,9) 1 10 28 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 4 40 | 17
+  shist no_sg_or_csum 18(0,17) 14(0,13) 1 14 32 | 3
+  shist no_sg_or_csum 18(0,17) 8(0,7) 1 8 26 | 1
+  shist no_sg_or_csum 18(0,17) 15(0,14) 1 15 33 | 2
+  shist no_sg_or_csum 18(0,17) 7(0,6) 1 7 25 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 1 37 | 2
+  shist no_sg_or_csum 18(0,17) 13(0,12) 1 13 31 | 2
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 2 38 | 3
+  shist no_sg_or_csum 18(0,17) 18(0,17) 3 1 55 | 2
+  shist no_sg_or_csum 18(0,17) 6(0,5) 1 6 24 | 2
+  => non-canonical re-entries: calls=0 ~segs=0
+
+### path-bond-nic (rc=0)
+  tx=on  UdpInCsumErrors=  7593 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7677 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist bond0 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 1 1 0 0 | 583 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 1 1 0 0 | 13 4
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 0 1 0 0 | 589 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 7 6
+  split_reason split=392
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=8
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 378
+  shist split 18(0,17) 18(0,17) 2 2 38 | 8
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 4
+  shist split 18(0,17) 18(0,17) 1 18 36 | 1
+  shist split 18(0,17) 18(0,17) 2 1 37 | 3
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 1
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 1
+  shist split 18(0,17) 18(0,17) 2 4 40 | 2
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 1
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 1
+  => non-canonical re-entries: calls=1172 ~segs=15236
+
+### path-macvlan-vlan-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=  7761 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7448 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 0 0 0 | 1 1 1 1 0 0 | 597 13
+  hist nic0 0x801 3 1 0 0 0 1 | 1 1 1 1 0 0 | 3 3
+  hist vlan444 0x801 3 1 1 0 0 0 | 0 0 0 0 0 0 | 571 13
+  hist vlan444 0x801 3 1 0 0 0 1 | 0 0 0 0 0 0 | 14 7
+  split_reason split=390
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=10
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 373
+  shist split 18(0,17) 18(0,17) 2 4 40 | 10
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 2
+  shist split 18(0,17) 18(0,17) 2 2 38 | 5
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 1
+  shist split 18(0,17) 18(0,17) 1 18 36 | 2
+  shist head_len_mismatch 18(0,17) 10(0,9) 1 10 28 | 1
+  shist head_len_mismatch 18(0,17) 11(0,10) 1 11 29 | 3
+  shist head_len_mismatch 18(0,17) 9(0,8) 1 9 27 | 1
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 1
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 1
+  => non-canonical re-entries: calls=1168 ~segs=15184
+
+### path-macvlan-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=  7302 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7195 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 0 0 1 | 1 1 1 1 0 0 | 58 3
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 402 38
+  hist nic0 0x801 3 1 1 0 0 0 | 1 1 1 1 0 0 | 539 13
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 0 1 0 0 | 534 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 59 3
+  split_reason split=377
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=25
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 2 38 | 38
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 15
+  shist split 18(0,17) 18(0,17) 2 1 37 | 39
+  shist split 18(0,17) 18(0,17) 1 18 36 | 19
+  shist split 18(0,17) 18(0,17) 2 3 39 | 275
+  shist split 18(0,17) 18(0,17) 2 4 40 | 6
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 2
+  shist head_len_mismatch 18(0,17) 2(0,1) 1 2 20 | 2
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 1
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 1
+  shist head_len_mismatch 18(0,17) 5(0,4) 1 5 23 | 1
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 1
+  shist head_len_mismatch 18(0,17) 3(0,2) 1 3 21 | 1
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  => non-canonical re-entries: calls=1073 ~segs=13949
+
+### path-vlan-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=  7754 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 200 38
+  hist nic0 0x801 3 1 1 0 0 0 | 1 1 1 1 0 0 | 595 13
+  hist nic0 0x801 3 1 0 0 0 1 | 1 1 1 1 0 0 | 4 4
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 0 0 0 0 0 | 200 38
+  hist vlan444 0x801 3 1 0 0 0 1 | 0 0 0 0 0 0 | 14 4
+  split_reason split=199
+  split_reason no_sg_or_csum=200
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=1
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 196
+  shist split 18(0,17) 18(0,17) 2 1 37 | 2
+  shist split 18(0,17) 18(0,17) 2 2 38 | 1
+  shist head_len_mismatch 18(0,17) 13(0,12) 1 13 31 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 180
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 1 37 | 4
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 4 40 | 6
+  shist no_sg_or_csum 18(0,17) 10(0,9) 1 10 28 | 1
+  shist no_sg_or_csum 18(0,17) 15(0,14) 1 15 33 | 3
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 2 38 | 5
+  shist no_sg_or_csum 18(0,17) 18(0,17) 1 18 36 | 1
+  => non-canonical re-entries: calls=595 ~segs=7735
+
+### path-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 0 1 1 | 0 1 1 1 0 0 | 200 38
+  hist nic0 0x801 3 1 0 0 0 1 | 1 1 1 1 0 0 | 6 5
+  hist nic0 0x801 3 1 0 0 1 1 | 0 0 0 1 0 0 | 201 38
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 7 5
+  split_reason split=0
+  split_reason no_sg_or_csum=201
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=200
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=0
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 3 39 | 191
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 2 38 | 3
+  shist net_gso_not_ok 18(0,17) 18(0,17) 2 4 40 | 3
+  shist net_gso_not_ok 18(0,17) 16(0,15) 1 16 34 | 1
+  shist net_gso_not_ok 18(0,17) 15(0,14) 1 15 33 | 1
+  shist net_gso_not_ok 18(0,17) 10(0,9) 1 10 28 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 190
+  shist no_sg_or_csum 18(0,17) 10(0,9) 1 10 28 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 2 38 | 2
+  shist no_sg_or_csum 18(0,17) 2(0,1) 1 2 20 | 2
+  shist no_sg_or_csum 18(0,17) 17(0,16) 1 17 35 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 1 18 36 | 1
+  shist no_sg_or_csum 18(0,17) 11(0,10) 1 11 29 | 1
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 4 40 | 2
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 1 37 | 1
+  => non-canonical re-entries: calls=0 ~segs=0
+
+### path-macvlan-vlan-bond-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=  7305 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7317 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist nic0 0x801 3 1 0 1 0 1 | 1 1 1 1 0 0 | 48 3
+  hist mvlan-vxgso 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 1 0 0 | 1 1 1 1 0 0 | 549 13
+  hist nic0 0x801 3 1 1 1 0 0 | 0 0 0 1 0 0 | 533 13
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 0 1 0 0 | 68 3
+  split_reason split=380
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=20
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist head_len_mismatch 18(0,17) 17(0,16) 1 17 35 | 9
+  shist head_len_mismatch 18(0,17) 12(0,11) 1 12 30 | 3
+  shist split 18(0,17) 18(0,17) 2 2 38 | 37
+  shist split 18(0,17) 18(0,17) 2 3 39 | 272
+  shist head_len_mismatch 18(0,17) 15(0,14) 1 15 33 | 3
+  shist split 18(0,17) 18(0,17) 2 1 37 | 31
+  shist split 18(0,17) 18(0,17) 2 4 40 | 13
+  shist split 18(0,17) 18(0,17) 1 18 36 | 27
+  shist head_len_mismatch 18(0,17) 16(0,15) 1 16 34 | 2
+  shist head_len_mismatch 18(0,17) 8(0,7) 1 8 26 | 1
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 1
+  shist head_len_mismatch 18(0,17) 1(0,0) 1 1 19 | 1
+  => non-canonical re-entries: calls=1082 ~segs=14066
+
+### path-vlan-bond-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 iperf_rc=0 NOT_REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist vlan444 0x801 3 1 0 0 1 1 | 0 1 1 0 1 0 | 401 38
+  hist nic0 0x801 3 1 0 1 0 1 | 0 0 0 1 0 0 | 2 7
+  split_reason split=0
+  split_reason no_sg_or_csum=401
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=0
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist no_sg_or_csum 18(0,17) 18(0,17) 2 3 39 | 398
+  shist no_sg_or_csum 18(0,17) 1(0,0) 1 1 19 | 1
+  shist no_sg_or_csum 18(0,17) 3(0,2) 1 3 21 | 1
+  shist no_sg_or_csum 18(0,17) 8(0,7) 1 8 26 | 1
+  => non-canonical re-entries: calls=0 ~segs=0
+
+### path-bond-nic+tso (rc=0)
+  tx=on  UdpInCsumErrors=  7695 iperf_rc=0 REPRODUCED
+  tx=off UdpInCsumErrors=  7748 iperf_rc=0 REPRODUCED
+  hist dev gso_type summed encap encap_hdr_csum linear fraglist canonical | features partial tso csum sg tnl_csum fraglist | calls avg_segs
+  hist bond0 0x801 3 1 0 0 1 1 | 0 1 1 1 1 0 | 400 38
+  hist nic0 0x801 3 1 1 0 0 0 | 1 1 1 1 0 0 | 588 13
+  hist nic0 0x801 3 1 0 0 0 1 | 1 1 1 1 0 0 | 18 3
+  hist nic0 0x801 3 1 1 0 0 0 | 0 0 0 1 0 0 | 595 13
+  hist nic0 0x801 3 1 0 0 0 1 | 0 0 0 1 0 0 | 12 2
+  split_reason split=397
+  split_reason no_sg_or_csum=0
+  split_reason gso_partial_feature=0
+  split_reason net_gso_not_ok=0
+  split_reason member_len_mismatch=0
+  split_reason member_linear=0
+  split_reason head_len_mismatch=3
+  shist reason head_segs(rem,frags) member_segs(rem,frags) nmembers last_segs total_segs | count
+  shist split 18(0,17) 18(0,17) 2 3 39 | 367
+  shist split 18(0,17) 18(0,17) 2 2 38 | 19
+  shist split 18(0,17) 18(0,17) 2 4 40 | 3
+  shist head_len_mismatch 18(0,17) 14(0,13) 1 14 32 | 2
+  shist split 18(0,17) 18(0,17) 2 1 37 | 6
+  shist split 18(0,17) 18(0,17) 1 18 36 | 2
+  shist head_len_mismatch 18(0,17) 4(0,3) 1 4 22 | 1
+  => non-canonical re-entries: calls=1183 ~segs=15379
