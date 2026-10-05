@@ -26,22 +26,39 @@ page (CI builds it for every `v*` tag), or build it yourself (needs only `dpkg-d
 
 ```bash
 git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
-vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_1.0.0_amd64.deb
+vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_<version>_amd64.deb
 ```
 
 Install it on each host. apt pulls in `dkms`; the module is built for every kernel that
 has headers, loaded immediately, and loaded at every boot:
 
 ```bash
-sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_1.0.0_amd64.deb
+sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_*_amd64.deb
 ```
 
 Check that it is active:
 
 ```bash
 lsmod | grep vxlan_gso_csum_fix
-sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
+sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active (report_interval=60s)"
 ```
+
+The module counts its work. `corrected_packets` is the number of packets that would
+have left with a bad outer checksum:
+
+```bash
+grep . /sys/module/vxlan_gso_csum_fix/parameters/*
+#   matched            skbs that met the fix condition (checksum recomputed)
+#   corrected          of those, skbs whose outer checksum was actually wrong
+#   corrected_packets  packets (GSO segments) in the corrected skbs
+#   report_interval    seconds between kernel log reports (default 60, 0 = off)
+```
+
+Every `report_interval` seconds, if the counters changed, a line like this is logged:
+`vxlan_gso_csum_fix: report: matched=1101 corrected=1101 corrected_packets=14316 (+287/+287/+3726)`
+(cumulative totals, then the change since the previous report). Change the interval
+at runtime with `echo 300 | sudo tee /sys/module/vxlan_gso_csum_fix/parameters/report_interval`,
+or permanently with `options vxlan_gso_csum_fix report_interval=300` in `/etc/modprobe.d/`.
 
 Remove it with `sudo apt remove vxlan-gso-csum-fix`.
 
@@ -64,12 +81,27 @@ Notes:
 - Once your kernel carries the patch, the module is redundant but harmless (the
   normalisation is idempotent); uninstall it.
 
+### Versions and releases
+
+The package version comes from the nearest `v*` git tag (`fix/dkms/version.sh`): a build
+at tag `v1.1.0` is `1.1.0`, a build 3 commits later is `1.1.0+3.gabc1234` (sorts after
+`1.1.0`), uncommitted changes add `.dirty`, and a copy without `.git` (e.g. a ZIP
+download) is `0.0.0+unknown`. Set `VERSION=...` to override.
+
+To release, push a tag; CI builds the package and attaches it to a GitHub Release:
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
 ## Layout
 
 ```
 fix/
   udp-gso-fix.patch          kernel fix (applies to Ubuntu 6.8.0-100.100, v6.8.12, v7.0)
-  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh)
+  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh,
+                             version.sh)
   livepatch-6.8.0-100/       same fix as a livepatch for 6.8.0-100-generic only
 lab/
   qemu-test.py               boot one kernel in a QEMU guest and run the reproducer

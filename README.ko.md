@@ -18,21 +18,35 @@ VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP�
 
 ```bash
 git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
-vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_1.0.0_amd64.deb
+vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_<version>_amd64.deb
 ```
 
 각 호스트에 설치합니다. apt가 `dkms`를 함께 설치하고, 헤더가 있는 모든 커널에 대해 모듈을 빌드한 뒤 바로 로드합니다. 이후 부팅할 때마다 자동으로 로드됩니다.
 
 ```bash
-sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_1.0.0_amd64.deb
+sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_*_amd64.deb
 ```
 
 동작 확인:
 
 ```bash
 lsmod | grep vxlan_gso_csum_fix
-sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
+sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active (report_interval=60s)"
 ```
+
+모듈은 처리량을 셉니다. `corrected_packets`는 수정이 없었다면 outer checksum이 틀린 채로 나갔을 패킷 수입니다.
+
+```bash
+grep . /sys/module/vxlan_gso_csum_fix/parameters/*
+#   matched            수정 조건을 만족해 checksum을 다시 계산한 skb 수
+#   corrected          그중 outer checksum이 실제로 틀려서 고쳐진 skb 수
+#   corrected_packets  고쳐진 skb에 담긴 패킷(GSO 세그먼트) 수
+#   report_interval    커널 로그 출력 간격(초, 기본 60, 0이면 끔)
+```
+
+`report_interval`초마다, 카운터가 바뀌었을 때만 다음과 같은 줄이 커널 로그에 남습니다.
+`vxlan_gso_csum_fix: report: matched=1101 corrected=1101 corrected_packets=14316 (+287/+287/+3726)`
+(누적값, 그리고 직전 출력 이후의 증가분). 실행 중 간격은 `echo 300 | sudo tee /sys/module/vxlan_gso_csum_fix/parameters/report_interval`로 바꿀 수 있고, 영구적으로 바꾸려면 `/etc/modprobe.d/`에 `options vxlan_gso_csum_fix report_interval=300`을 넣습니다.
 
 제거: `sudo apt remove vxlan-gso-csum-fix`
 
@@ -45,12 +59,24 @@ sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
 - 이 모듈은 대상 함수의 인자를 레지스터에서 읽습니다. 위 커널들에서는 맞지만, 다른 빌드에 쓰기 전에는 확인이 필요합니다([docs/REPORT.ko.md](docs/REPORT.ko.md#수정-방식별-성능-kprobe-vs-livepatch) 참고).
 - 커널에 패치가 들어간 뒤에는 이 모듈이 불필요하지만 해가 되지는 않습니다(정규화는 여러 번 해도 결과가 같습니다). 그때는 제거하면 됩니다.
 
+### 버전과 릴리스
+
+패키지 버전은 가장 가까운 `v*` git 태그에서 정해집니다(`fix/dkms/version.sh`). `v1.1.0` 태그 위치에서 빌드하면 `1.1.0`, 그 뒤 3번째 커밋에서 빌드하면 `1.1.0+3.gabc1234`(`1.1.0`보다 높게 정렬)입니다. 커밋되지 않은 변경이 있으면 `.dirty`가 붙고, `.git`이 없는 사본(ZIP 다운로드 등)은 `0.0.0+unknown`입니다. `VERSION=...`으로 덮어쓸 수 있습니다.
+
+릴리스할 때는 태그를 push하면 됩니다. CI가 패키지를 빌드해 GitHub Release에 첨부합니다.
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
 ## 디렉터리 구성
 
 ```
 fix/
   udp-gso-fix.patch          kernel fix (applies to Ubuntu 6.8.0-100.100, v6.8.12, v7.0)
-  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh)
+  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh,
+                             version.sh)
   livepatch-6.8.0-100/       same fix as a livepatch for 6.8.0-100-generic only
 lab/
   qemu-test.py               boot one kernel in a QEMU guest and run the reproducer

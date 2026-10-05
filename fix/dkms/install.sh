@@ -4,10 +4,10 @@
 # DKMS rebuilds the module automatically for each newly installed kernel.
 set -euo pipefail
 
-NAME=vxlan-gso-csum-fix
-VERSION=1.0.0
-MODULE=vxlan_gso_csum_fix
 HERE=$(cd -- "$(dirname -- "$0")" && pwd)
+NAME=$(sed -n 's/^PACKAGE_NAME="\(.*\)"/\1/p' "$HERE/dkms.conf")
+VERSION=$("$HERE/version.sh")
+MODULE=$(sed -n 's/^BUILT_MODULE_NAME\[0\]="\(.*\)"/\1/p' "$HERE/dkms.conf")
 
 [[ $EUID -eq 0 ]] || { echo "run as root: sudo $0" >&2; exit 1; }
 [[ $(uname -m) == x86_64 ]] || { echo "only x86_64 is supported" >&2; exit 1; }
@@ -17,15 +17,12 @@ command -v dkms >/dev/null || { echo "dkms is missing: apt install dkms" >&2; ex
     exit 1
 }
 
-# Reinstall cleanly if an older copy is registered.
-# (Not "dkms status | grep -q": with pipefail, dkms may die of SIGPIPE and fail the test.)
-if [[ -n $(dkms status -m "$NAME" -v "$VERSION") ]]; then
-    modprobe -r "$MODULE" 2>/dev/null || true
-    dkms remove -m "$NAME" -v "$VERSION" --all
-fi
-rm -rf "/usr/src/$NAME-$VERSION"
+# Reinstall cleanly: drop every registered version (this one or an older one).
+"$HERE/uninstall.sh" >/dev/null
 mkdir -p "/usr/src/$NAME-$VERSION"
-cp "$HERE/dkms.conf" "$HERE/Makefile" "$HERE/$MODULE.c" "/usr/src/$NAME-$VERSION/"
+for f in dkms.conf Makefile "$MODULE.c"; do
+    sed "s/@VERSION@/$VERSION/g" "$HERE/$f" >"/usr/src/$NAME-$VERSION/$f"
+done
 
 dkms add -m "$NAME" -v "$VERSION"
 dkms build -m "$NAME" -v "$VERSION"
