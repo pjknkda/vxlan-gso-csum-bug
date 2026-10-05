@@ -1,10 +1,10 @@
 # VXLAN 터널 GSO 재분할 시 outer UDP checksum 손상
 
-[English](README.md) · **한국어**
+[English](README.md) | **한국어**
 
 [Elice Inc.](https://elice.io/ko)(엘리스)가 문제를 찾고 해결했습니다.
 
-VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP도) 포워딩하는 리눅스 호스트에서, 적층 장치(macvlan, bond 등)가 GRO skb를 "아직 GSO인 skb 여러 개"로 나누고 하위 장치가 이를 다시 소프트웨어로 분할하면 **outer UDP checksum이 틀린 패킷**이 나갑니다. Ubuntu 22.04 / 24.04 / 26.04 커널(5.15 ~ 7.0)에서 재현했고, upstream v7.0에도 같은 코드가 남아 있습니다.
+VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP도) 포워딩하는 리눅스 호스트에서, 적층 장치(macvlan, bond 등)가 GRO skb를 "아직 GSO인 skb 여러 개"로 나누고 하위 장치가 이를 다시 소프트웨어로 분할하면 **outer UDP checksum이 틀린 패킷**이 나갑니다. Ubuntu 22.04 / 24.04 / 26.04 커널(5.15 \~ 7.0)에서 재현했고, upstream v7.0에도 같은 코드가 남아 있습니다.
 
 - 전체 분석: [docs/REPORT.ko.md](docs/REPORT.ko.md) ([English](docs/REPORT.md))
 - 커널 패치: [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)
@@ -12,7 +12,7 @@ VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP�
 
 ## 수정 설치 (DKMS)
 
-영향받는 커널(x86-64, Ubuntu 22.04 / 24.04 / 26.04의 5.15 ~ 7.0 커널)을 쓰는 호스트용입니다. [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)와 같은 수정을 kprobe로 적용하는 작은 커널 모듈입니다. 새 커널을 설치할 때마다 DKMS가 다시 빌드하고, 부팅 시 자동으로 로드됩니다.
+영향받는 커널(x86-64, Ubuntu 22.04 / 24.04 / 26.04의 5.15 \~ 7.0 커널)을 쓰는 호스트용입니다. [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)와 같은 수정을 kprobe로 적용하는 작은 커널 모듈입니다. 새 커널을 설치할 때마다 DKMS가 다시 빌드하고, 부팅 시 자동으로 로드됩니다.
 
 ```bash
 sudo apt install dkms linux-headers-$(uname -r)

@@ -1,8 +1,10 @@
 # VXLAN 터널 GSO 재분할 시 outer UDP checksum 손상
 
-[English](REPORT.md) · **한국어**
+[English](REPORT.md) | **한국어**
 
-작성: [Elice Inc.](https://elice.io/ko) · 작성일: 2026-10-05 · 확인 커널: Ubuntu 22.04 / 24.04 / 26.04 LTS (5.15 ~ 7.0), upstream v5.15 ~ v7.0 동일 코드
+- 작성: [Elice Inc.](https://elice.io/ko)
+- 작성일: 2026-10-05
+- 확인 커널: Ubuntu 22.04 / 24.04 / 26.04 LTS (5.15 \~ 7.0), upstream v5.15 \~ v7.0 동일 코드
 
 ## 요약
 
@@ -61,8 +63,8 @@ TCP 트래픽을 받아 VXLAN으로 캡슐화해 다른 호스트로 보내는 *
 | 2 | VXLAN에서 **outer UDP checksum을 사용**한다 | IPv4 VXLAN은 `udpcsum` 옵션을 켰을 때 해당한다. IPv6 underlay는 기본으로 checksum을 쓴다(IPv6는 미검증). | `noudpcsum` |
 | 3 | **vxlan 장치가 TSO로 GSO skb를 그대로 내려보낸다** | vxlan TSO가 꺼져 있으면 캡슐화 전에 분할되어 터널 GSO skb가 생기지 않는다. | **vxlan TSO off** |
 | 4 | vxlan의 `gso_max_segs`가 GRO skb 크기 이상이다 | 그보다 큰 skb는 vxlan 단계에서 미리 완전 분할되어 이 경로에 오지 않는다. | **`gso_max_segs` N < 2 × GRO 블록** (예: mlx5 환경에서 13) |
-| 5 | VXLAN과 NIC 사이에 **FRAGLIST가 없고, 터널 skb에 대해 SG·TSO feature를 가진 장치**가 있다 | macvlan과 bond는 항상 해당한다. VLAN은 하위 장치 feature가 바뀌기 전에만 해당한다("VLAN의 이력 의존성" 참고). 이 장치가 1차 분할 지점이 된다. | 구조 변경 |
-| 6 | 그 아래 장치가 1차 분할 결과(GSO skb)를 **다시 SW GSO**한다 | NIC TX checksum off, NIC에 터널 TSO가 없음, 또는 NIC가 UDP 터널 checksum을 GSO_PARTIAL 방식으로만 지원하는 경우(mlx5, igb 등). | — |
+| 5 | VXLAN과 NIC 사이에 **FRAGLIST가 없고, 터널 skb에 대해 SG와 TSO feature를 가진 장치**가 있다 | macvlan과 bond는 항상 해당한다. VLAN은 하위 장치 feature가 바뀌기 전에만 해당한다("VLAN의 이력 의존성" 참고). 이 장치가 1차 분할 지점이 된다. | 구조 변경 |
+| 6 | 그 아래 장치가 1차 분할 결과(GSO skb)를 **다시 SW GSO**한다 | NIC TX checksum off, NIC에 터널 TSO가 없음, 또는 NIC가 UDP 터널 checksum을 GSO_PARTIAL 방식으로만 지원하는 경우(mlx5, igb 등). | - |
 
 최초 관찰 환경: Ubuntu 24.04 `6.8.0-100-generic` 포워딩 호스트(mlx5 ConnectX-5, bond, VLAN, macvlan, VXLAN udpcsum)에서 Intel i40e 수신 호스트로 보내는 구성이었다. 수신측 RX checksum offload가 켜져 있으면 i40e가 오류를 가릴 수 있어, RX offload를 끄고 확인했다.
 
@@ -80,7 +82,7 @@ VXLAN 장치와 wire 사이의 송신측 장치 스택별 결과다. 결정적 �
 | VLAN → bond → NIC | 없음 ² | 0 | 0 |
 | NIC 직결 | 없음 ³ | 0 | 0 |
 
-- NIC가 mlx5처럼 GSO_PARTIAL 터널 TSO를 쓰는 설정(igb `tx-tcp-mangleid-segmentation on`)에서도 모든 경로의 재현 여부가 같았다(수치 7195~7761).
+- NIC가 mlx5처럼 GSO_PARTIAL 터널 TSO를 쓰는 설정(igb `tx-tcp-mangleid-segmentation on`)에서도 모든 경로의 재현 여부가 같았다(수치 7195\~7761).
 - ¹ TX off로 바꾸는 순간 NIC feature가 바뀌면서 VLAN이 SG를 잃는다. TX off 자체가 아니라 feature 변경 이력 때문에 재현되지 않은 것이다.
 - ² VLAN 아래 bond는 slave link-up 시점(VLAN 생성 이후)에 feature를 다시 계산한다. 이 때문에 VLAN이 항상 SG를 잃는다.
 - ³ NIC가 직접 분할하면 그 결과가 곧바로 NIC로 나가므로 2차 분할(재진입)이 일어나지 않는다.
@@ -91,14 +93,14 @@ VXLAN 장치와 wire 사이의 송신측 장치 스택별 결과다. 결정적 �
 
 | inner 트래픽 | router NIC GRO 모드 | `UdpInCsumErrors` TX on / off | inner datagram 전달 (8000개 중) TX on / off | 터널 skb `gso_type` |
 |---|---|---|---|---|
-| TCP (대조군) | 기본 | **7675 / 7719** | — | `TCPV4 \| UDP_TUNNEL_CSUM` |
+| TCP (대조군) | 기본 | **7675 / 7719** | - | `TCPV4 \| UDP_TUNNEL_CSUM` |
 | UDP | 기본 | 0 / 0 | 8000 / 8000 | (GSO 없음) |
 | UDP | **`rx-udp-gro-forwarding on`** | **7722 / 7601** | **278 / 399** | `UDP_L4 \| UDP_TUNNEL_CSUM` |
 | UDP | `rx-gro-list on` | 0 / 0 | 8000 / 8000 | `FRAGLIST \| UDP_L4 \| UDP_TUNNEL_CSUM` |
 | UDP + 수정 | `rx-udp-gro-forwarding on` | 0 / 0 | 8000 / 8000 | `UDP_L4 \| UDP_TUNNEL_CSUM` |
 
 - **기본 설정**: 포워딩되는 UDP는 GRO되지 않으므로 GSO skb가 없고 영향도 없다.
-- **`rx-udp-gro-forwarding on`**: UDP GRO도 TCP와 같은 `skb_gro_receive()`로 frag_list skb를 만든다. 상위 장치가 `skb_segment()`로 split하고, 하위 장치에서 `__skb_udp_tunnel_segment()`에 재진입하는 과정이 TCP와 똑같다. datagram의 약 95~97%가 수신측에서 버려졌고, 수정을 적용하면 0이 된다.
+- **`rx-udp-gro-forwarding on`**: UDP GRO도 TCP와 같은 `skb_gro_receive()`로 frag_list skb를 만든다. 상위 장치가 `skb_segment()`로 split하고, 하위 장치에서 `__skb_udp_tunnel_segment()`에 재진입하는 과정이 TCP와 똑같다. datagram의 약 95\~97%가 수신측에서 버려졌고, 수정을 적용하면 0이 된다.
 - **`rx-gro-list on`** (fraglist GRO): 상위 장치가 `skb_segment_list()`로 곧바로 개별 패킷까지 분할하므로 2차 분할이 없다.
 
 ### VLAN의 이력 의존성
@@ -154,7 +156,7 @@ if ((skb_shinfo(skb)->gso_type & SKB_GSO_UDP_TUNNEL_CSUM) &&
 
 ### 왜 일반 트래픽에서는 간헐적으로 보이는가
 
-split 경로는 GRO skb가 **블록 2개 이상**(head 길이 = 첫 멤버 길이)일 때만 탄다. 랩에서 iperf를 30초씩 3회 돌렸을 때, frag_list skb 약 1만 건 중 99.5%는 블록 1개 + 일부(19~35 segs)라 split이 일어나지 않았다(`docs/data/iperf-split-analysis.txt`). GRO skb 크기는 NAPI poll 한 번에 도착한 버스트 크기에 달려 있으므로, 트래픽 패턴과 부하에 따라 발생 빈도가 달라진다.
+split 경로는 GRO skb가 **블록 2개 이상**(head 길이 = 첫 멤버 길이)일 때만 탄다. 랩에서 iperf를 30초씩 3회 돌렸을 때, frag_list skb 약 1만 건 중 99.5%는 블록 1개 + 일부(19\~35 segs)라 split이 일어나지 않았다(`docs/data/iperf-split-analysis.txt`). GRO skb 크기는 NAPI poll 한 번에 도착한 버스트 크기에 달려 있으므로, 트래픽 패턴과 부하에 따라 발생 빈도가 달라진다.
 
 ## workaround 분석
 
@@ -171,7 +173,7 @@ split 경로는 GRO skb가 **블록 2개 이상**(head 길이 = 첫 멤버 길�
 
 **`gso_max_segs` 제한이 효과 있는 이유.** `gso_features_check()`는 `gso_segs > dev->gso_max_segs`인 skb에서 GSO feature를 제거한다. 그래서 큰 GRO skb는 vxlan 단계에서 TSO off와 똑같이 처리된다. 작은 skb는 GSO를 유지하지만 블록 2개 미만이라 split 조건을 만족하지 못한다. 최초 관찰 환경에서 13은 정상, 14부터 오류였던 것은 mlx5 GRO 블록이 7 segs(2×7=14)라는 해석과 맞는다(블록 크기는 관찰값에서 추정). 다만 이 값은 NIC 드라이버의 GRO 블록 크기에 의존하므로 다른 NIC에는 그대로 옮길 수 없다(igb는 블록이 18이므로 계산상 35 이하가 필요하다).
 
-**비용.** 두 workaround 모두 vxlan 아래 장치 스택(vxlan 캡슐화, route/neighbor 처리, macvlan, VLAN, bond, qdisc, 드라이버)을 **GSO skb 단위가 아니라 MSS 패킷 단위로** 지나가게 만든다. 따라서 패킷 처리 CPU 비용이 GRO 집적 배수만큼 늘고, NIC TSO 이점도 사라진다. TSO off는 모든 skb에, `gso_max_segs`는 한도를 넘는 skb에만 적용되므로 `gso_max_segs` 쪽이 비용이 작다. 이 랩의 iperf 처리량(약 200~270 Mbps)은 에뮬레이션 NIC가 병목이라 이 CPU 차이를 보여 주지 못한다(`docs/data/workarounds.txt`). 실제 비용은 실 장비에서 CPU 사용률로 측정해야 한다. 반면 수정 패치는 터널 GSO를 그대로 유지하고, 재분할 skb마다 수십 ns만 더한다("수정 방식별 성능" 절).
+**비용.** 두 workaround 모두 vxlan 아래 장치 스택(vxlan 캡슐화, route/neighbor 처리, macvlan, VLAN, bond, qdisc, 드라이버)을 **GSO skb 단위가 아니라 MSS 패킷 단위로** 지나가게 만든다. 따라서 패킷 처리 CPU 비용이 GRO 집적 배수만큼 늘고, NIC TSO 이점도 사라진다. TSO off는 모든 skb에, `gso_max_segs`는 한도를 넘는 skb에만 적용되므로 `gso_max_segs` 쪽이 비용이 작다. 이 랩의 iperf 처리량(약 200\~270 Mbps)은 에뮬레이션 NIC가 병목이라 이 CPU 차이를 보여 주지 못한다(`docs/data/workarounds.txt`). 실제 비용은 실 장비에서 CPU 사용률로 측정해야 한다. 반면 수정 패치는 터널 GSO를 그대로 유지하고, 재분할 skb마다 수십 ns만 더한다("수정 방식별 성능" 절).
 
 ## 영향 커널
 
@@ -180,7 +182,7 @@ split 경로는 GRO skb가 **블록 2개 이상**(head 길이 = 첫 멤버 길�
 | LTS | 커널 | TX offload off | TX offload on | 수정 적용 (off / on) |
 |---|---|---|---|---|
 | 22.04 GA | 5.15.0-198 | **6544** | **6252** | 0 / 0 |
-| 22.04 HWE | 6.8.0-138 (~22.04.1) | **6018** | **6288** | 0 / 0 |
+| 22.04 HWE | 6.8.0-138 (`~22.04.1`) | **6018** | **6288** | 0 / 0 |
 | 24.04 GA | 6.8.0-100 | **5031** | **5536** | 0 / 0 |
 | 24.04 GA | 6.8.0-146 | **5648** | **6235** | 0 / 0 |
 | 24.04 HWE / 26.04 GA | 7.0.0-38 | **6343** | **6585** | 0 / 0 |
@@ -197,13 +199,13 @@ split 경로는 GRO skb가 **블록 2개 이상**(head 길이 = 첫 멤버 길�
 
 | | 호출당 시간 | 수정 없음 대비 |
 |---|---|---|
-| 수정 없음 | 1302 ns (sd 18) | — |
+| 수정 없음 | 1302 ns (sd 18) | - |
 | kprobe | 1372 ns (sd 16) | **+70 ns** |
 | livepatch (`klp_patch`로 함수 교체) | 1338 ns (sd 6) | **+36 ns** |
 
 - 측정에 쓴 두 모듈은 모두 결정적 재현기(TX on/off)에서 오류를 0으로 만드는 것을 따로 확인했다.
-- 수정 조건이 참일 때(실제로 seed를 다시 계산할 때)와 거짓일 때의 차이는 0~4 ns로, 수정 로직 자체의 비용은 무시할 수 있다. 비용은 거의 전부 hook 진입 비용이다.
-- 7 segs와 14 segs skb(호출당 3.8~6.7 µs)에서는 두 방식의 차이가 측정 노이즈(±50~200 ns)에 묻혔다.
+- 수정 조건이 참일 때(실제로 seed를 다시 계산할 때)와 거짓일 때의 차이는 0\~4 ns로, 수정 로직 자체의 비용은 무시할 수 있다. 비용은 거의 전부 hook 진입 비용이다.
+- 7 segs와 14 segs skb(호출당 3.8\~6.7 µs)에서는 두 방식의 차이가 측정 노이즈(±50\~200 ns)에 묻혔다.
 - 이 함수는 패킷마다가 아니라 **SW로 터널 GSO되는 skb마다 한 번** 불린다. 최초 관찰 환경에서는 초당 약 1만 3천 회였으므로, kprobe라도 CPU 코어 하나의 0.1% 미만이다. 초당 100만 회라고 가정해도 kprobe 약 7%, livepatch 약 4%(코어 하나 기준)다.
 
 따라서 **성능은 선택 기준이 되지 않는다.** 운영 측면의 차이가 더 중요하다.
@@ -243,7 +245,7 @@ QEMU VM 한 대 안에 네트워크 namespace를 나눠 두 호스트를 흉내 
 - **router ns / evn ns**가 문제의 포워딩 호스트다. NIC와 VLAN은 router ns에, macvlan과 vxlan은 evn ns에 있다. 스크립트 변수 `NA_*`가 이쪽 설정이다.
 - 커널은 Ubuntu `.deb`를 설치 없이 풀어서 diskless initramfs로 부팅한다(`scripts/fetch-kernel.py`).
 - NIC는 QEMU `igb`(Intel 82576)다. Linux igb 드라이버는 mlx5처럼 UDP 터널 checksum을 GSO_PARTIAL 방식으로 광고한다. veth만으로 구성하면 재현되지 않는다(2차 분할이 일어나지 않음).
-- **결정적 재현기** (`lab/tools/burst.c`): client에서 AF_PACKET으로 같은 flow의 연속 TCP 세그먼트(1188 B, ACK, PSH 없음)를 40개씩 200회 보낸다. router NIC의 `rx-usecs=2000`으로 버스트 하나가 GRO 한 번에 묶이게 해서, 매번 18+18+4 구조의 frag_list skb를 만든다. 버스트의 75~99%가 split 경로를 탄다.
+- **결정적 재현기** (`lab/tools/burst.c`): client에서 AF_PACKET으로 같은 flow의 연속 TCP 세그먼트(1188 B, ACK, PSH 없음)를 40개씩 200회 보낸다. router NIC의 `rx-usecs=2000`으로 버스트 하나가 GRO 한 번에 묶이게 해서, 매번 18+18+4 구조의 frag_list skb를 만든다. 버스트의 75\~99%가 split 경로를 탄다.
 - **계측** (`lab/kmod/trace/gso_entry_reseed.c`, kprobe): `skb_segment()`의 split 판정 이유와 GRO 블록 구조, `__skb_udp_tunnel_segment()` 호출별 진입 상태(장치, seed 여부)를 기록한다. `mode=1`이면 수정을 적용한다.
 
 ### QEMU igb 모델 수정 (TX offload on 재현에 필요)
@@ -285,4 +287,4 @@ QEMU 8.2 igb 모델은 TX descriptor의 헤더 위치 정보(`MACLEN/IPLEN/L4LEN
 - GRO 블록 크기 18은 igb의 2 KB rx buffer 구조에서 나온다. mlx5의 블록 7은 관찰값에서 추정한 것이다.
 - workaround의 CPU 비용은 이 랩(에뮬레이션 NIC)에서 측정할 수 없다.
 - IPv6 underlay와 VXLAN 외의 UDP 터널은 검증하지 않았다. inner UDP는 6.8.0-100, 기본 경로에서만 테스트했다.
-- QEMU 패치는 IPv4/IPv6 TCP·UDP의 TSO/TXSM을 대상으로 한다. SCTP와 VMDq/loopback은 기존 동작을 쓴다.
+- QEMU 패치는 IPv4/IPv6 TCP와 UDP의 TSO/TXSM을 대상으로 한다. SCTP와 VMDq/loopback은 기존 동작을 쓴다.

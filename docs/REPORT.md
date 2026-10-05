@@ -1,15 +1,17 @@
 # Corrupted outer UDP checksum when a VXLAN GSO skb is segmented twice
 
-**English** · [한국어](REPORT.ko.md)
+**English** | [한국어](REPORT.ko.md)
 
-Authors: [Elice Inc.](https://elice.io) · Date: 2026-10-05 · Kernels checked: Ubuntu 22.04 / 24.04 / 26.04 LTS (5.15 – 7.0); the relevant code is identical in upstream v5.15 – v7.0
+- Authors: [Elice Inc.](https://elice.io)
+- Date: 2026-10-05
+- Kernels checked: Ubuntu 22.04 / 24.04 / 26.04 LTS (5.15 to 7.0); the relevant code is identical in upstream v5.15 to v7.0
 
 ## Summary
 
 - **Symptom**: a Linux host that **forwards TCP (or, with UDP GRO forwarding enabled, UDP) into a VXLAN tunnel with UDP checksums** sends packets with a **wrong outer UDP checksum** under certain device stacks. The receiver drops them as UDP checksum errors (`Udp: InCsumErrors`), so TCP retransmits and throughput collapses.
 - **Cause**: when a tunnel GSO skb that has already been through one segmentation pass is **software-segmented again** by a lower device, `__skb_udp_tunnel_segment()` misreads its outer UDP checksum field (see "Root cause").
 - **Scope**: reproduced on Ubuntu 22.04 (5.15, HWE 6.8), 24.04 (6.8, HWE 7.0) and 26.04 (7.0), with NIC TX checksum offload on and off. The same code is in upstream v7.0.
-- **Fix**: a ~20-line patch that normalises the outer UDP checksum to the pseudo-header seed when segmentation is re-entered (`fix/udp-gso-fix.patch`). Errors drop to 0 on every kernel and device stack tested.
+- **Fix**: a roughly 20-line patch that normalises the outer UDP checksum to the pseudo-header seed when segmentation is re-entered (`fix/udp-gso-fix.patch`). Errors drop to 0 on every kernel and device stack tested.
 - **Known workarounds**: turning off TSO on the vxlan device, or lowering its `gso_max_segs`, avoids the problem. Both keep tunnel GSO skbs off this path (see "Workarounds").
 - **Reproduction**: deterministic, in a single QEMU VM with no physical NIC.
 
@@ -62,7 +64,7 @@ The problem occurs on a **router/gateway host** that receives TCP and sends it o
 | 3 | **The vxlan device passes GSO skbs down (TSO on)** | With vxlan TSO off, packets are segmented before encapsulation and no tunnel GSO skb exists. | **vxlan TSO off** |
 | 4 | vxlan `gso_max_segs` is at least the GRO skb size | Larger skbs are fully segmented at the vxlan device and never reach this path. | **`gso_max_segs` N < 2 × GRO block** (e.g. 13 with mlx5) |
 | 5 | Between VXLAN and the NIC there is a device **without FRAGLIST but with SG and TSO for tunnel skbs** | Always true for macvlan and bond. True for VLAN only until the lower device's features change (see "VLAN history dependence"). This device performs the first split. | change the stack |
-| 6 | A device below it **software-segments the split result again** | NIC TX checksum off, no tunnel TSO on the NIC, or a NIC that supports UDP tunnel checksum only through GSO_PARTIAL (mlx5, igb, ...). | — |
+| 6 | A device below it **software-segments the split result again** | NIC TX checksum off, no tunnel TSO on the NIC, or a NIC that supports UDP tunnel checksum only through GSO_PARTIAL (mlx5, igb, ...). | - |
 
 First observed on an Ubuntu 24.04 `6.8.0-100-generic` forwarding host (mlx5 ConnectX-5, bond, VLAN, macvlan, VXLAN udpcsum) sending to an Intel i40e receiver. The i40e RX checksum offload can hide the errors, so they were confirmed with RX offload off.
 
@@ -80,7 +82,7 @@ Results for each sender-side stack between the VXLAN device and the wire, using 
 | VLAN → bond → NIC | none ² | 0 | 0 |
 | NIC directly | none ³ | 0 | 0 |
 
-- With the NIC doing tunnel TSO through GSO_PARTIAL like mlx5 (igb `tx-tcp-mangleid-segmentation on`), every stack behaved the same (7195–7761 where reproduced).
+- With the NIC doing tunnel TSO through GSO_PARTIAL like mlx5 (igb `tx-tcp-mangleid-segmentation on`), every stack behaved the same (7195 to 7761 where reproduced).
 - ¹ Switching to TX off changes the NIC's features, and the VLAN loses SG at that moment. The result is due to the feature-change history, not to TX off itself.
 - ² A bond under the VLAN recomputes its features at slave link-up (after the VLAN exists), so the VLAN always loses SG.
 - ³ When the NIC itself splits the skb, the result goes straight to the NIC; there is no second segmentation pass.
@@ -91,14 +93,14 @@ The tunnel segmentation path does not depend on the inner protocol, so inner UDP
 
 | Inner traffic | Router NIC GRO mode | `UdpInCsumErrors` TX on / off | Inner datagrams delivered (of 8000) TX on / off | Tunnel skb `gso_type` |
 |---|---|---|---|---|
-| TCP (reference) | default | **7675 / 7719** | — | `TCPV4 \| UDP_TUNNEL_CSUM` |
+| TCP (reference) | default | **7675 / 7719** | - | `TCPV4 \| UDP_TUNNEL_CSUM` |
 | UDP | default | 0 / 0 | 8000 / 8000 | (no GSO) |
 | UDP | **`rx-udp-gro-forwarding on`** | **7722 / 7601** | **278 / 399** | `UDP_L4 \| UDP_TUNNEL_CSUM` |
 | UDP | `rx-gro-list on` | 0 / 0 | 8000 / 8000 | `FRAGLIST \| UDP_L4 \| UDP_TUNNEL_CSUM` |
 | UDP + fix | `rx-udp-gro-forwarding on` | 0 / 0 | 8000 / 8000 | `UDP_L4 \| UDP_TUNNEL_CSUM` |
 
 - **Default settings**: forwarded UDP is not GRO'd, so there is no GSO skb and no exposure.
-- **`rx-udp-gro-forwarding on`**: UDP GRO builds frag_list skbs through the same `skb_gro_receive()` as TCP, the upper device splits them in `skb_segment()`, and the lower device re-enters `__skb_udp_tunnel_segment()` exactly as with TCP. About 95–97% of the datagrams were dropped at the receiver; the fix brings this to 0.
+- **`rx-udp-gro-forwarding on`**: UDP GRO builds frag_list skbs through the same `skb_gro_receive()` as TCP, the upper device splits them in `skb_segment()`, and the lower device re-enters `__skb_udp_tunnel_segment()` exactly as with TCP. About 95 to 97% of the datagrams were dropped at the receiver; the fix brings this to 0.
 - **`rx-gro-list on`** (fraglist GRO): the upper device segments the skb with `skb_segment_list()` straight into individual packets, so there is no second pass.
 
 ### VLAN history dependence
@@ -154,7 +156,7 @@ Fixing the **output** of the first split instead is wrong: that value is correct
 
 ### Why it looks intermittent with ordinary traffic
 
-The split path is taken only when the GRO skb holds **at least two blocks** (head length = first member length). In three 30-second iperf runs in the lab, 99.5% of about 10,000 frag_list skbs were one block plus a remainder (19–35 segments) and were not split (`docs/data/iperf-split-analysis.txt`). The GRO skb size depends on how many packets arrive within one NAPI poll, so the error rate varies with traffic pattern and load.
+The split path is taken only when the GRO skb holds **at least two blocks** (head length = first member length). In three 30-second iperf runs in the lab, 99.5% of about 10,000 frag_list skbs were one block plus a remainder (19 to 35 segments) and were not split (`docs/data/iperf-split-analysis.txt`). The GRO skb size depends on how many packets arrive within one NAPI poll, so the error rate varies with traffic pattern and load.
 
 ## Workarounds
 
@@ -171,7 +173,7 @@ Why the two known workarounds help and what they cost. Measured on 6.8.0-100 und
 
 **Why limiting `gso_max_segs` helps.** `gso_features_check()` drops the GSO features for skbs with `gso_segs > dev->gso_max_segs`, so large GRO skbs are handled at the vxlan device exactly as with TSO off. Smaller skbs keep GSO but hold fewer than two blocks and cannot meet the split condition. On the original host, 13 worked and 14 failed, consistent with an mlx5 GRO block of 7 segments (2 × 7 = 14; the block size is inferred from observations). The safe value depends on the driver's GRO block size and does not carry over to other NICs (igb, with 18-segment blocks, would need 35 or less by the same reasoning).
 
-**Cost.** Both workarounds make the whole stack below vxlan (encapsulation, route/neighbour handling, macvlan, VLAN, bond, qdisc, driver) run **per MSS packet instead of per GSO skb**. Per-packet CPU cost grows by the GRO aggregation factor and NIC TSO is no longer used. TSO off affects every skb; `gso_max_segs` affects only skbs above the limit, so it is the cheaper of the two. Throughput in this lab (about 200–270 Mbps with iperf) is limited by the emulated NIC and does not show the CPU difference (`docs/data/workarounds.txt`); the real cost has to be measured as CPU usage on real hardware. The fix keeps tunnel GSO intact and adds a few tens of nanoseconds per re-segmented skb (see "Fix delivery: kprobe vs livepatch").
+**Cost.** Both workarounds make the whole stack below vxlan (encapsulation, route/neighbour handling, macvlan, VLAN, bond, qdisc, driver) run **per MSS packet instead of per GSO skb**. Per-packet CPU cost grows by the GRO aggregation factor and NIC TSO is no longer used. TSO off affects every skb; `gso_max_segs` affects only skbs above the limit, so it is the cheaper of the two. Throughput in this lab (about 200 to 270 Mbps with iperf) is limited by the emulated NIC and does not show the CPU difference (`docs/data/workarounds.txt`); the real cost has to be measured as CPU usage on real hardware. The fix keeps tunnel GSO intact and adds a few tens of nanoseconds per re-segmented skb (see "Fix delivery: kprobe vs livepatch").
 
 ## Affected kernels
 
@@ -180,7 +182,7 @@ Deterministic reproducer (40-segment bursts), igb NICs (patched QEMU model). Raw
 | LTS | Kernel | TX offload off | TX offload on | Fix applied (off / on) |
 |---|---|---|---|---|
 | 22.04 GA | 5.15.0-198 | **6544** | **6252** | 0 / 0 |
-| 22.04 HWE | 6.8.0-138 (~22.04.1) | **6018** | **6288** | 0 / 0 |
+| 22.04 HWE | 6.8.0-138 (`~22.04.1`) | **6018** | **6288** | 0 / 0 |
 | 24.04 GA | 6.8.0-100 | **5031** | **5536** | 0 / 0 |
 | 24.04 GA | 6.8.0-146 | **5648** | **6235** | 0 / 0 |
 | 24.04 HWE / 26.04 GA | 7.0.0-38 | **6343** | **6585** | 0 / 0 |
@@ -197,13 +199,13 @@ Per-call cost of applying the fix from a kprobe pre-handler (`fix/dkms/`) versus
 
 | | Per call | vs no fix |
 |---|---|---|
-| no fix | 1302 ns (sd 18) | — |
+| no fix | 1302 ns (sd 18) | - |
 | kprobe | 1372 ns (sd 16) | **+70 ns** |
 | livepatch (function replaced via `klp_patch`) | 1338 ns (sd 6) | **+36 ns** |
 
 - Both modules used here were separately confirmed to bring errors to 0 with the deterministic reproducer (TX on and off).
-- The difference between the fix condition being true (seed actually recomputed) and false is 0–4 ns, so the fix logic itself is negligible; the cost is almost entirely the hook entry.
-- For 7- and 14-segment skbs (3.8–6.7 µs per call) the difference disappeared in measurement noise (±50–200 ns).
+- The difference between the fix condition being true (seed actually recomputed) and false is 0 to 4 ns, so the fix logic itself is negligible; the cost is almost entirely the hook entry.
+- For 7- and 14-segment skbs (3.8 to 6.7 µs per call) the difference disappeared in measurement noise (±50 to 200 ns).
 - The function runs **once per software-segmented tunnel GSO skb**, not per packet. On the original host that was about 13,000 calls per second, i.e. under 0.1% of one CPU core even with the kprobe. At an assumed 1 million calls per second it would be about 7% of a core for the kprobe and 4% for the livepatch.
 
 So **performance does not decide the choice**; operational differences do.
@@ -243,7 +245,7 @@ One QEMU VM, split into network namespaces that stand in for two hosts. The two 
 - **router ns / evn ns** is the forwarding host under test: the NIC and VLAN live in router ns, macvlan and vxlan in evn ns. The script variables `NA_*` configure this side.
 - Kernels are Ubuntu `.deb`s extracted without installation and booted as a diskless initramfs (`scripts/fetch-kernel.py`).
 - The NICs are QEMU `igb` (Intel 82576). Like mlx5, the Linux igb driver advertises UDP tunnel checksum offload through GSO_PARTIAL. An all-veth setup does not reproduce (no second segmentation pass).
-- **Deterministic reproducer** (`lab/tools/burst.c`): the client sends 200 bursts of 40 consecutive TCP segments of one flow (1188 bytes, ACK, no PSH) through AF_PACKET. `rx-usecs=2000` on the router NIC makes each burst land in one GRO run, producing an 18+18+4 frag_list skb each time. 75–99% of bursts take the split path.
+- **Deterministic reproducer** (`lab/tools/burst.c`): the client sends 200 bursts of 40 consecutive TCP segments of one flow (1188 bytes, ACK, no PSH) through AF_PACKET. `rx-usecs=2000` on the router NIC makes each burst land in one GRO run, producing an 18+18+4 frag_list skb each time. 75 to 99% of bursts take the split path.
 - **Instrumentation** (`lab/kmod/trace/gso_entry_reseed.c`, kprobe): records why `skb_segment()` did or did not split, the GRO block layout, and the entry state of every `__skb_udp_tunnel_segment()` call (device, seed or not). With `mode=1` it applies the fix.
 
 ### QEMU igb model fix (needed for TX offload on)

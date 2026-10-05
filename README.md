@@ -1,15 +1,14 @@
 # VXLAN tunnel GSO re-segmentation corrupts the outer UDP checksum
 
-**English** · [한국어](README.ko.md)
+**English** | [한국어](README.ko.md)
 
 Investigated and fixed by [Elice Inc.](https://elice.io)
 
 A Linux host that forwards TCP (or UDP, with UDP GRO forwarding enabled) into a VXLAN
-tunnel with UDP checksums can send packets
-with a **wrong outer UDP checksum** when a stacked device (macvlan, bond, ...) splits a
-GRO skb into several still-GSO skbs and a lower device segments them again in software.
-Reproduced on Ubuntu 22.04 / 24.04 / 26.04 kernels (5.15 – 7.0); the code is unchanged
-in upstream v7.0.
+tunnel with UDP checksums can send packets with a **wrong outer UDP checksum** when a
+stacked device (macvlan, bond, ...) splits a GRO skb into several still-GSO skbs and a
+lower device segments them again in software. Reproduced on Ubuntu 22.04 / 24.04 / 26.04
+kernels (5.15 to 7.0); the code is unchanged in upstream v7.0.
 
 - Full analysis: [docs/REPORT.md](docs/REPORT.md) ([한국어](docs/REPORT.ko.md))
 - Kernel fix: [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)
@@ -18,7 +17,7 @@ in upstream v7.0.
 ## Install the fix (DKMS)
 
 For hosts running an affected kernel (x86-64, Ubuntu 22.04 / 24.04 / 26.04 kernels
-5.15 – 7.0). The fix is a small kernel module that applies the same change as
+5.15 to 7.0). The fix is a small kernel module that applies the same change as
 [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch) through a kprobe. DKMS rebuilds it
 for every kernel you install, and it is loaded at boot.
 
