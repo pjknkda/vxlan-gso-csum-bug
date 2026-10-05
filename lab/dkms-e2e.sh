@@ -42,8 +42,8 @@ DISK=$OUT/disk.qcow2
 
 tar -C "$ROOT/fix" -cf "$OUT/seed/dkms.tar" dkms
 if [[ $MODE == deb ]]; then
-    "$ROOT/fix/dkms/build-deb.sh" >/dev/null
-    cp "$ROOT"/dist/vxlan-gso-csum-fix_*_amd64.deb "$OUT/seed/fix.deb"
+    deb=$("$ROOT/fix/dkms/build-deb.sh" | sed -n 's/^built //p')
+    cp "$ROOT/$deb" "$OUT/seed/fix.deb"
     INSTALL='curl -fsS http://10.0.2.2:'$PORT'/fix.deb -o /root/fix.deb && apt-get install -y -q /root/fix.deb'
     UNINSTALL='apt-get remove -y -q vxlan-gso-csum-fix'
     LOADCONF=/usr/lib/modules-load.d/vxlan-gso-csum-fix.conf
@@ -67,7 +67,7 @@ write_files:
       if [ -d /sys/module/vxlan_gso_csum_fix ]; then echo E2E_BOOT2_LOADED_OK; else echo E2E_BOOT2_NOT_LOADED; fi
       $UNINSTALL
       if [ ! -d /sys/module/vxlan_gso_csum_fix ] && [ -z "\$(dkms status vxlan-gso-csum-fix)" ] \\
-         && [ ! -e $LOADCONF ] && [ ! -d /usr/src/vxlan-gso-csum-fix-1.0.0 ]; then echo E2E_UNINSTALL_OK; else echo E2E_UNINSTALL_FAIL; fi
+         && [ ! -e $LOADCONF ] && [ -z "\$(ls -d /usr/src/vxlan-gso-csum-fix-* 2>/dev/null)" ]; then echo E2E_UNINSTALL_OK; else echo E2E_UNINSTALL_FAIL; fi
       echo E2E_DONE
       { sed 's/^/boot1| /' /root/e2e-boot1.log; cat /root/e2e-boot2.log; } |
           while IFS= read -r l; do printf '<3>e2e: %s\n' "\$l" >/dev/kmsg; sleep 0.002; done

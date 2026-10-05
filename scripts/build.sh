@@ -32,7 +32,7 @@ build() {   # build <name> <source.c>
     local dir=$WORK/$1
     rm -rf "$dir"
     mkdir -p "$dir"
-    cp "$2" "$dir/"
+    sed "s/@VERSION@/$("$ROOT/fix/dkms/version.sh")/g" "$2" >"$dir/$(basename "$2")"
     echo "obj-m := $1.o" >"$dir/Makefile"
     if ! make -C "$HDR" M="$dir" CC="$CC" modules >"$dir/build.log" 2>&1; then
         cat "$dir/build.log" >&2

@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0
 # Build dist/vxlan-gso-csum-fix_<version>_amd64.deb: the DKMS source package.
+# The version comes from the git tag (fix/dkms/version.sh; override with VERSION=).
 # Installing it registers the module with DKMS, builds it for every kernel that
 # has headers, loads it, and loads it at boot. Needs only dpkg-deb (no root).
 set -euo pipefail
@@ -12,7 +13,7 @@ MAINTAINER=${MAINTAINER:-"Elice Inc. <cloud-dev@elicer.com>"}
 HERE=$(cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(cd -- "$HERE/../.." && pwd)
 NAME=$(sed -n 's/^PACKAGE_NAME="\(.*\)"/\1/p' "$HERE/dkms.conf")
-VERSION=$(sed -n 's/^PACKAGE_VERSION="\(.*\)"/\1/p' "$HERE/dkms.conf")
+VERSION=$("$HERE/version.sh")
 MODULE=$(sed -n 's/^BUILT_MODULE_NAME\[0\]="\(.*\)"/\1/p' "$HERE/dkms.conf")
 OUT=$ROOT/dist
 STAGE=$(mktemp -d)
@@ -21,7 +22,14 @@ trap 'rm -rf "$STAGE"' EXIT
 src=$STAGE/usr/src/$NAME-$VERSION
 chmod 0755 "$STAGE"
 mkdir -p "$src" "$STAGE/usr/lib/modules-load.d" "$STAGE/usr/share/doc/$NAME" "$STAGE/DEBIAN"
-install -m 0644 "$HERE/dkms.conf" "$HERE/Makefile" "$HERE/$MODULE.c" "$src/"
+for f in dkms.conf Makefile "$MODULE.c"; do
+    sed "s/@VERSION@/$VERSION/g" "$HERE/$f" >"$src/$f"
+    chmod 0644 "$src/$f"
+done
+if grep -rq '@VERSION@' "$src"; then
+    echo "unsubstituted @VERSION@ in $src" >&2
+    exit 1
+fi
 # Vendor directory, not /etc: owned by the package and removed with it.
 echo "$MODULE" >"$STAGE/usr/lib/modules-load.d/$NAME.conf"
 {
