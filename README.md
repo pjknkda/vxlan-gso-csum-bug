@@ -21,10 +21,18 @@ For hosts running an affected kernel (x86-64, Ubuntu 22.04 / 24.04 / 26.04 kerne
 [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch) through a kprobe. DKMS rebuilds it
 for every kernel you install, and it is loaded at boot.
 
+Build the package once (needs only `dpkg-deb`; no root):
+
 ```bash
-sudo apt install dkms linux-headers-$(uname -r)
-git clone <this repository> vxlan-gso-csum-bug
-sudo vxlan-gso-csum-bug/fix/dkms/install.sh
+git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
+vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_1.0.0_amd64.deb
+```
+
+Install it on each host. apt pulls in `dkms`; the module is built for every kernel that
+has headers, loaded immediately, and loaded at every boot:
+
+```bash
+sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_1.0.0_amd64.deb
 ```
 
 Check that it is active:
@@ -34,11 +42,16 @@ lsmod | grep vxlan_gso_csum_fix
 sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
 ```
 
-Remove it with `sudo vxlan-gso-csum-bug/fix/dkms/uninstall.sh`.
+Remove it with `sudo apt remove vxlan-gso-csum-fix`.
 
-Tested end to end on a stock Ubuntu 24.04 cloud image (`lab/dkms-e2e.sh`): installed on
-6.8.0-142-generic, rebuilt automatically by DKMS when the HWE kernel 7.0.0-38-generic
-was installed, loaded at boot on 7.0, and removed cleanly from both kernels.
+Without the package, `sudo vxlan-gso-csum-bug/fix/dkms/install.sh` (after
+`sudo apt install dkms linux-headers-$(uname -r)`) does the same from the source tree;
+undo it with `fix/dkms/uninstall.sh`.
+
+Both ways were tested end to end on a stock Ubuntu 24.04 cloud image (`lab/dkms-e2e.sh`,
+`MODE=deb` or `MODE=script`): installed on 6.8.0-142-generic, rebuilt automatically by
+DKMS when the HWE kernel 7.0.0-38-generic was installed, loaded at boot on 7.0, and
+removed with nothing left behind.
 
 Notes:
 - With Secure Boot, DKMS signs the module with the machine's MOK key; that key must be
@@ -55,7 +68,7 @@ Notes:
 ```
 fix/
   udp-gso-fix.patch          kernel fix (applies to Ubuntu 6.8.0-100.100, v6.8.12, v7.0)
-  dkms/                      same fix as a kprobe module, packaged for DKMS (install.sh)
+  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh)
   livepatch-6.8.0-100/       same fix as a livepatch for 6.8.0-100-generic only
 lab/
   qemu-test.py               boot one kernel in a QEMU guest and run the reproducer

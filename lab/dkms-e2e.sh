@@ -1,10 +1,11 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
 # End-to-end test of fix/dkms on a stock Ubuntu 24.04 cloud image (KVM + network):
-#   boot 1 (GA 6.8 kernel): apt install dkms + headers, fix/dkms/install.sh, check it
-#          loads, then install the HWE kernel (DKMS must build the module for it), reboot
-#   boot 2 (HWE kernel):    check the module was built and auto-loaded, run
-#          uninstall.sh, check it is gone, power off
+#   boot 1 (GA 6.8 kernel): install the fix, check it loads, then install the HWE
+#          kernel (DKMS must build the module for it), reboot
+#   boot 2 (HWE kernel):    check the module was built and auto-loaded, remove the
+#          fix, check nothing is left, power off
+# MODE=deb (default) installs dist/*.deb with apt; MODE=script uses install.sh/uninstall.sh.
 # Uses the system qemu-system-x86_64 (needs user networking) on a 12 GB qcow2 overlay,
 # so the downloaded image is never modified. qemu-img is built from .cache/qemu if the
 # host has none. Markers E2E_* are printed on the serial console.
@@ -15,6 +16,7 @@ CLOUD=$ROOT/.cache/cloud
 OUT=${OUT:-$ROOT/results/dkms-e2e-$(date -u +%Y%m%dT%H%M%SZ)}
 IMG=$CLOUD/noble-server-cloudimg-amd64.img
 PORT=${PORT:-8765}
+MODE=${MODE:-deb}
 
 mkdir -p "$CLOUD" "$OUT/seed"
 [[ -f $IMG ]] || curl -fL -o "$IMG" https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
@@ -39,6 +41,17 @@ DISK=$OUT/disk.qcow2
 "$QEMU_IMG" create -q -f qcow2 -F qcow2 -b "$IMG" "$DISK" 12G
 
 tar -C "$ROOT/fix" -cf "$OUT/seed/dkms.tar" dkms
+if [[ $MODE == deb ]]; then
+    "$ROOT/fix/dkms/build-deb.sh" >/dev/null
+    cp "$ROOT"/dist/vxlan-gso-csum-fix_*_amd64.deb "$OUT/seed/fix.deb"
+    INSTALL='curl -fsS http://10.0.2.2:'$PORT'/fix.deb -o /root/fix.deb && apt-get install -y -q /root/fix.deb'
+    UNINSTALL='apt-get remove -y -q vxlan-gso-csum-fix'
+    LOADCONF=/usr/lib/modules-load.d/vxlan-gso-csum-fix.conf
+else
+    INSTALL='apt-get install -y -q dkms && /root/dkms/install.sh'
+    UNINSTALL='/root/dkms/uninstall.sh'
+    LOADCONF=/etc/modules-load.d/vxlan-gso-csum-fix.conf
+fi
 printf 'instance-id: dkms-e2e\nlocal-hostname: dkms-e2e\n' >"$OUT/seed/meta-data"
 cat >"$OUT/seed/user-data" <<EOF
 #cloud-config
@@ -52,9 +65,9 @@ write_files:
       echo "E2E_BOOT2_KERNEL \$(uname -r)"
       dkms status vxlan-gso-csum-fix | sed 's/^/E2E_DKMS_STATUS /'
       if [ -d /sys/module/vxlan_gso_csum_fix ]; then echo E2E_BOOT2_LOADED_OK; else echo E2E_BOOT2_NOT_LOADED; fi
-      /root/dkms/uninstall.sh
+      $UNINSTALL
       if [ ! -d /sys/module/vxlan_gso_csum_fix ] && [ -z "\$(dkms status vxlan-gso-csum-fix)" ] \\
-         && [ ! -e /etc/modules-load.d/vxlan-gso-csum-fix.conf ]; then echo E2E_UNINSTALL_OK; else echo E2E_UNINSTALL_FAIL; fi
+         && [ ! -e $LOADCONF ] && [ ! -d /usr/src/vxlan-gso-csum-fix-1.0.0 ]; then echo E2E_UNINSTALL_OK; else echo E2E_UNINSTALL_FAIL; fi
       echo E2E_DONE
       { sed 's/^/boot1| /' /root/e2e-boot1.log; cat /root/e2e-boot2.log; } |
           while IFS= read -r l; do printf '<3>e2e: %s\n' "\$l" >/dev/kmsg; sleep 0.002; done
@@ -79,9 +92,10 @@ runcmd:
     df -h /
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -q
-    apt-get install -y -q dkms "linux-headers-\$(uname -r)"
+    apt-get install -y -q "linux-headers-\$(uname -r)"
     curl -fsS http://10.0.2.2:$PORT/dkms.tar | tar -x -C /root
-    if /root/dkms/install.sh; then echo E2E_INSTALL_OK; else echo E2E_INSTALL_FAIL; fi
+    echo "E2E_MODE $MODE"
+    if $INSTALL; then echo E2E_INSTALL_OK; else echo E2E_INSTALL_FAIL; fi
     if [ -d /sys/module/vxlan_gso_csum_fix ]; then echo E2E_BOOT1_LOADED_OK; fi
     apt-get install -y -q linux-generic-hwe-24.04
     dkms status vxlan-gso-csum-fix | sed 's/^/E2E_DKMS_STATUS /'

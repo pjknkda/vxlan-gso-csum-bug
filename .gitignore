@@ -5,3 +5,5 @@
 # Pre-restructure workspace kept locally; not part of the repository
 /old/
 __pycache__/
+# Built packages (fix/dkms/build-deb.sh); attach to a release instead of committing
+/dist/

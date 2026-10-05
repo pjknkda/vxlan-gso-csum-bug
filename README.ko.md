@@ -14,10 +14,17 @@ VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP�
 
 영향받는 커널(x86-64, Ubuntu 22.04 / 24.04 / 26.04의 5.15 \~ 7.0 커널)을 쓰는 호스트용입니다. [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)와 같은 수정을 kprobe로 적용하는 작은 커널 모듈입니다. 새 커널을 설치할 때마다 DKMS가 다시 빌드하고, 부팅 시 자동으로 로드됩니다.
 
+패키지를 한 번 빌드합니다(`dpkg-deb`만 있으면 되고 root 권한은 필요 없습니다).
+
 ```bash
-sudo apt install dkms linux-headers-$(uname -r)
-git clone <이 저장소> vxlan-gso-csum-bug
-sudo vxlan-gso-csum-bug/fix/dkms/install.sh
+git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
+vxlan-gso-csum-bug/fix/dkms/build-deb.sh        # -> dist/vxlan-gso-csum-fix_1.0.0_amd64.deb
+```
+
+각 호스트에 설치합니다. apt가 `dkms`를 함께 설치하고, 헤더가 있는 모든 커널에 대해 모듈을 빌드한 뒤 바로 로드합니다. 이후 부팅할 때마다 자동으로 로드됩니다.
+
+```bash
+sudo apt install linux-headers-$(uname -r) ./vxlan-gso-csum-fix_1.0.0_amd64.deb
 ```
 
 동작 확인:
@@ -27,9 +34,11 @@ lsmod | grep vxlan_gso_csum_fix
 sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
 ```
 
-제거: `sudo vxlan-gso-csum-bug/fix/dkms/uninstall.sh`
+제거: `sudo apt remove vxlan-gso-csum-fix`
 
-실제 Ubuntu 24.04 클라우드 이미지에서 end-to-end로 검증했습니다(`lab/dkms-e2e.sh`). 6.8.0-142-generic에 설치한 뒤 HWE 커널 7.0.0-38-generic을 설치하자 DKMS가 모듈을 자동으로 다시 빌드했고, 7.0으로 재부팅하자 자동 로드됐으며, 제거 시 두 커널 모두에서 깨끗이 지워졌습니다.
+패키지 없이 소스에서 바로 설치하려면 `sudo apt install dkms linux-headers-$(uname -r)` 후 `sudo vxlan-gso-csum-bug/fix/dkms/install.sh`를 실행합니다. 제거는 `fix/dkms/uninstall.sh`입니다.
+
+두 방식 모두 실제 Ubuntu 24.04 클라우드 이미지에서 end-to-end로 검증했습니다(`lab/dkms-e2e.sh`, `MODE=deb` 또는 `MODE=script`). 6.8.0-142-generic에 설치한 뒤 HWE 커널 7.0.0-38-generic을 설치하자 DKMS가 모듈을 자동으로 다시 빌드했고, 7.0으로 재부팅하자 자동 로드됐으며, 제거 후 남은 파일이 없었습니다.
 
 참고:
 - Secure Boot 환경에서는 DKMS가 머신의 MOK 키로 모듈에 서명합니다. 그 키가 등록되어 있어야 합니다(`dkms`를 처음 설치할 때 Ubuntu가 등록을 안내합니다). Secure Boot는 end-to-end 테스트에 포함되지 않았습니다.
@@ -41,7 +50,7 @@ sudo dmesg | grep vxlan_gso_csum_fix     # "vxlan_gso_csum_fix: active"
 ```
 fix/
   udp-gso-fix.patch          kernel fix (applies to Ubuntu 6.8.0-100.100, v6.8.12, v7.0)
-  dkms/                      same fix as a kprobe module, packaged for DKMS (install.sh)
+  dkms/                      same fix as a kprobe module for DKMS (build-deb.sh, install.sh)
   livepatch-6.8.0-100/       same fix as a livepatch for 6.8.0-100-generic only
 lab/
   qemu-test.py               boot one kernel in a QEMU guest and run the reproducer
