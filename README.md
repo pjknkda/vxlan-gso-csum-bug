@@ -21,7 +21,8 @@ For hosts running an affected kernel (x86-64, Ubuntu 22.04 / 24.04 / 26.04 kerne
 [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch) through a kprobe. DKMS rebuilds it
 for every kernel you install, and it is loaded at boot.
 
-Build the package once (needs only `dpkg-deb`; no root):
+Get the package from the [Releases](https://github.com/pjknkda/vxlan-gso-csum-bug/releases)
+page (CI builds it for every `v*` tag), or build it yourself (needs only `dpkg-deb`; no root):
 
 ```bash
 git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
@@ -82,6 +83,8 @@ lab/
   kmod/bench/                skb_gso_segment() microbenchmark
   qemu/igb-desc-offload.patch  QEMU igb model fix needed for TX-offload-on runs
 scripts/                     download / build everything into .cache/ (not committed)
+.github/workflows/deb.yml    CI: build the .deb, DKMS-compile it for Ubuntu 24.04 GA and HWE
+                             kernels, attach it to a GitHub Release on v* tags
 docs/                        report and result summaries
 ```
 

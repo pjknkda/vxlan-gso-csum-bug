@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: MIT
+# Build the DKMS .deb, check that DKMS can compile it for Ubuntu 24.04 GA and HWE
+# kernels, and attach it to a GitHub Release when a v* tag is pushed.
+name: deb
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build package
+        run: fix/dkms/build-deb.sh
+
+      - name: Check that the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(sed -n 's/^PACKAGE_VERSION="\(.*\)"/\1/p' fix/dkms/dkms.conf)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match dkms.conf version $version"
+            exit 1
+          fi
+
+      - name: Show package
+        run: |
+          dpkg-deb --info dist/*.deb
+          dpkg-deb --contents dist/*.deb
+
+      # Compile the module exactly as packaged, without loading it on the runner.
+      - name: DKMS build for Ubuntu 24.04 GA and HWE kernels
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q dkms linux-headers-generic linux-headers-generic-hwe-24.04
+          name=$(sed -n 's/^PACKAGE_NAME="\(.*\)"/\1/p' fix/dkms/dkms.conf)
+          version=$(sed -n 's/^PACKAGE_VERSION="\(.*\)"/\1/p' fix/dkms/dkms.conf)
+          pkg=$(mktemp -d)
+          dpkg-deb -x dist/*.deb "$pkg"
+          sudo cp -r "$pkg/usr/src/$name-$version" /usr/src/
+          sudo dkms add -m "$name" -v "$version"
+          kernels=$(ls -d /usr/src/linux-headers-*-generic | sed 's#.*/linux-headers-##' | sort -V)
+          [ -n "$kernels" ] || { echo "::error::no generic kernel headers installed"; exit 1; }
+          for k in $kernels; do
+            echo "::group::dkms build $k"
+            sudo dkms build -m "$name" -v "$version" -k "$k"
+            ko=$(sudo find "/var/lib/dkms/$name/$version/$k" -name 'vxlan_gso_csum_fix.ko*' | head -1)
+            [ -n "$ko" ] || { echo "::error::no module built for $k"; exit 1; }
+            sudo modinfo "$ko" | grep -E '^(version|vermagic):'
+            echo "::endgroup::"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: dist/*.deb
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb
+          path: dist
+
+      - name: Create release with the package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.deb \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

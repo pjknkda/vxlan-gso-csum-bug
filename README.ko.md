@@ -14,7 +14,7 @@ VXLAN 터널(UDP checksum 사용)로 TCP를(UDP GRO 포워딩을 켰다면 UDP�
 
 영향받는 커널(x86-64, Ubuntu 22.04 / 24.04 / 26.04의 5.15 \~ 7.0 커널)을 쓰는 호스트용입니다. [fix/udp-gso-fix.patch](fix/udp-gso-fix.patch)와 같은 수정을 kprobe로 적용하는 작은 커널 모듈입니다. 새 커널을 설치할 때마다 DKMS가 다시 빌드하고, 부팅 시 자동으로 로드됩니다.
 
-패키지를 한 번 빌드합니다(`dpkg-deb`만 있으면 되고 root 권한은 필요 없습니다).
+패키지는 [Releases](https://github.com/pjknkda/vxlan-gso-csum-bug/releases) 페이지에서 받을 수 있습니다(`v*` 태그마다 CI가 빌드해 첨부합니다). 직접 빌드할 수도 있습니다(`dpkg-deb`만 있으면 되고 root 권한은 필요 없습니다).
 
 ```bash
 git clone https://github.com/pjknkda/vxlan-gso-csum-bug.git
@@ -64,6 +64,8 @@ lab/
   kmod/bench/                skb_gso_segment() microbenchmark
   qemu/igb-desc-offload.patch  QEMU igb model fix needed for TX-offload-on runs
 scripts/                     download / build everything into .cache/ (not committed)
+.github/workflows/deb.yml    CI: build the .deb, DKMS-compile it for Ubuntu 24.04 GA and HWE
+                             kernels, attach it to a GitHub Release on v* tags
 docs/                        report and result summaries
 ```
 
