@@ -1,0 +1,44 @@
+### vm-tso (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### vm-notso (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+
+# IFF_NAPI cases (results/vm-1)
+### vm-tso-napi (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### vm-notso-napi (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### fix-vm-tso-napi (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0
+### fix-vm-notso-napi (rc=0)
+  tx=on  UdpInCsumErrors=     0 NOT_REPRODUCED
+  tx=off UdpInCsumErrors=     0 NOT_REPRODUCED
+  split_reason split=0
+  split_reason no_sg_or_csum=0
+  split_reason head_len_mismatch=0
+  non-seed re-entries: calls=0 ~segs=0

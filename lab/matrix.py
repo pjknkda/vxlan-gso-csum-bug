@@ -63,6 +63,14 @@ CASES["udp-gro-fwd"] = UDP + UDP_GRO_FWD + BURST
 CASES["udp-gro-list"] = UDP + GRO_LIST + BURST
 CASES["fix-udp-gro-fwd"] = UDP + UDP_GRO_FWD + BURST
 CASES["fix-udp-gro-list"] = UDP + GRO_LIST + BURST
+# A VM behind a tap device on the router sends TCP into the tunnel (no router NIC GRO involved).
+VM = ["--env", "TRAFFIC=vm"]
+CASES["vm-tso"] = VM + ["--env", "VM_TSO=1"]
+CASES["vm-notso"] = VM + ["--env", "VM_TSO=0"]
+CASES["vm-tso-napi"] = VM + ["--env", "VM_TSO=1", "--env", "VM_NAPI=1"]
+CASES["vm-notso-napi"] = VM + ["--env", "VM_TSO=0", "--env", "VM_NAPI=1"]
+CASES["fix-vm-notso-napi"] = CASES["vm-notso-napi"]
+CASES["fix-vm-tso-napi"] = CASES["vm-tso-napi"]
 CASES["fix"] = BURST
 CASES["fix+iperf"] = []
 CASES["fix+tunnel-tso"] = TUNNEL_TSO + BURST

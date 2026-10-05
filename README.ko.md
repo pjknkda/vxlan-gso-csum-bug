@@ -59,6 +59,7 @@ lab/
   dkms-e2e.sh                install/upgrade/uninstall test of fix/dkms on an Ubuntu cloud image
   guest/                     scripts that run inside the guest
   tools/burst.c              deterministic GRO feeder (same-flow TCP segment bursts)
+  tools/tapinject.c          stand-in for a VM sending TCP through a tap device
   tools/pcap-csum.py         check outer UDP / inner TCP checksums in a pcap
   kmod/trace/                tracing kprobe (+ fix with mode=1)
   kmod/bench/                skb_gso_segment() microbenchmark
@@ -110,6 +111,7 @@ lab/matrix.py --tag smoke-7.0 --release 7.0.0-38-generic base fix
 | `vxlan-tso-off`, `gso-max-segs-13` | 알려진 workaround 두 가지 |
 | `router-gro-off`, `vxlan-nocsum`, `no-gso-partial`, `no-tnl-seg`, `vlan-sg-off`, `tunnel-tso` | 어떤 조건이 필요한지 |
 | `path-*` | VXLAN 장치와 wire 사이의 장치 경로별 결과 |
+| `vm-tso`, `vm-notso`, `vm-*-napi`, `fix-vm-*` | router의 tap 뒤 VM이 터널로 송신 |
 | `<case>+iperf` | 버스트 대신 iperf3 사용 (간헐적 재현, 리포트 참고) |
 | `<case>@N` | 같은 케이스 반복 |
 

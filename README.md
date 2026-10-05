@@ -78,6 +78,7 @@ lab/
   dkms-e2e.sh                install/upgrade/uninstall test of fix/dkms on an Ubuntu cloud image
   guest/                     scripts that run inside the guest
   tools/burst.c              deterministic GRO feeder (same-flow TCP segment bursts)
+  tools/tapinject.c          stand-in for a VM sending TCP through a tap device
   tools/pcap-csum.py         check outer UDP / inner TCP checksums in a pcap
   kmod/trace/                tracing kprobe (+ fix with mode=1)
   kmod/bench/                skb_gso_segment() microbenchmark
@@ -132,6 +133,7 @@ Expected output: `base` shows thousands of `UdpInCsumErrors` for both TX offload
 | `vxlan-tso-off`, `gso-max-segs-13` | the two known workarounds |
 | `router-gro-off`, `vxlan-nocsum`, `no-gso-partial`, `no-tnl-seg`, `vlan-sg-off`, `tunnel-tso` | which conditions matter |
 | `path-*` | device stacks between the VXLAN device and the wire |
+| `vm-tso`, `vm-notso`, `vm-*-napi`, `fix-vm-*` | a VM behind a tap device on the router sends into the tunnel |
 | `<case>+iperf` | the same with iperf3 instead of bursts (intermittent, see report) |
 | `<case>@N` | repeat a case |
 

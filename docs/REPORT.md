@@ -103,6 +103,22 @@ The tunnel segmentation path does not depend on the inner protocol, so inner UDP
 - **`rx-udp-gro-forwarding on`**: UDP GRO builds frag_list skbs through the same `skb_gro_receive()` as TCP, the upper device splits them in `skb_segment()`, and the lower device re-enters `__skb_udp_tunnel_segment()` exactly as with TCP. About 95 to 97% of the datagrams were dropped at the receiver; the fix brings this to 0.
 - **`rx-gro-list on`** (fraglist GRO): the upper device segments the skb with `skb_segment_list()` straight into individual packets, so there is no second pass.
 
+## VM behind a tap device (send direction)
+
+A host that runs VMs and sends their traffic into the tunnel (VM → tap → routing → vxlan → macvlan → VLAN → NIC) was emulated with `lab/tools/tapinject.c`, which writes frames to a tap device with a virtio_net_hdr the way QEMU does (200 bursts of 40 segments, 6.8.0-100, KVM). Raw data: `docs/data/vm-tap-send.txt`.
+
+| VM sends | tap | Tunnel GSO | First split | Non-seed re-entries | `UdpInCsumErrors` TX on / off |
+|---|---|---|---|---|---|
+| TSO frames (virtio GSO) | default | yes (200 × 40 segs) | 0 | 0 | 0 / 0 |
+| MSS-size frames | default | no | 0 | 0 | 0 / 0 |
+| TSO frames | `IFF_NAPI` | yes | 0 | 0 | 0 / 0 |
+| MSS-size frames | `IFF_NAPI` | no | 0 | 0 | 0 / 0 |
+
+- **Not affected.** A tap device hands frames to the stack with `netif_receive_skb()` (both `write()` and the vhost-net path), without GRO, so there is no frag_list skb. TSO frames from the VM go through tunnel GSO, but the upper device has nothing to split and the lower device always sees a correct seed.
+- VM frames carry `SKB_GSO_DODGY`. The first device only validates them (`tcp_gso_segment()` returns early) and `__skb_udp_tunnel_segment()` unwinds, leaving `encap_hdr_csum` set with an unchanged, correct seed. The fix condition is true on the next pass, but it rewrites the same value, so it is harmless.
+- Limitation: with `IFF_NAPI`, tap RX does go through GRO, but writes from user space schedule NAPI per frame and nothing is aggregated. vhost-net batching together with `IFF_NAPI` (which QEMU does not enable by default) was not emulated.
+- The receive direction (VXLAN → decap → tap → VM) does not use `__skb_udp_tunnel_segment()` at all: `iptunnel_pull_offloads()` clears the tunnel GSO bits on decapsulation. Such a host can still *observe* the errors when the host sending to it is affected.
+
 ### VLAN history dependence
 
 `register_netdevice()` adds `NETIF_F_SG` to a new device's `hw_enc_features`, so a freshly created VLAN has SG for tunnel skbs and can perform the first split. On a feature-change event from the lower device (`NETDEV_FEAT_CHANGE`), however, `vlan_transfer_features()` overwrites `hw_enc_features` with `vlan_tnl_features(real_dev)`, which does not include SG. Whether a VLAN stack reproduces therefore depends on **whether the lower NIC or bond changed features after the VLAN was created** (an `ethtool -K`, a bond slave change, ...). macvlan and bond have no such history dependence.
